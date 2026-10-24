@@ -57,6 +57,16 @@
     tee: 'tee', hoodie: 'hoodie', shirt: 'shirt', jacket: 'jacket', kurta: 'kurta', dress: 'dress',
   };
 
+  // Props live inside the arm group so they move with the hand.
+  const BOUQUET = `<g class="prop prop-flowers">
+    <path d="M85,147 L81,127 M85,147 L85,124 M85,147 L89,127" stroke="#3f9b4f" stroke-width="1.6"/>
+    <path d="M90,130 Q96,126 94,121 Q89,124 90,130Z M80,130 Q74,126 76,121 Q81,124 80,130Z" fill="#5cbf6a"/>
+    <path d="M78,131 L92,131 L85,152Z" fill="#fff3c4" stroke="#f2d48a" stroke-width="1"/>
+    <circle cx="80" cy="126" r="4.4" fill="#ff5c8a"/><circle cx="90" cy="126" r="4.4" fill="#ffd166"/>
+    <circle cx="85" cy="120" r="4.8" fill="#ff8fb5"/>
+    <circle cx="80" cy="126" r="1.6" fill="#ffd9e5"/><circle cx="90" cy="126" r="1.6" fill="#fff2c7"/>
+    <circle cx="85" cy="120" r="1.8" fill="#ffd9e5"/></g>`;
+
   function outfitSvg(type, color, skin, pants) {
     const dark = shade(color, -0.22);
     const TORSO = 'M40,112 Q40,101 53,100 L67,100 Q80,101 80,112 L82,156 Q60,161 38,156Z';
@@ -75,6 +85,7 @@
       return `<g class="arm arm-${side}">
         <path d="M${sx},108 L${hx},146" stroke="${skin}" stroke-width="8" stroke-linecap="round"/>
         <path d="M${sx},108 L${sleeveEnd}" stroke="${color}" stroke-width="${longSleeve ? 10 : 11}" stroke-linecap="round"/>
+        ${side === 'r' ? BOUQUET : ''}
         <circle cx="${hx}" cy="147" r="5.5" fill="${skin}"/></g>`;
     };
     let torso;
@@ -123,6 +134,8 @@
     const ink = '#2b2233';
     return `<svg viewBox="0 0 120 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <ellipse class="shadow" cx="60" cy="203" rx="30" ry="5" fill="rgba(0,0,0,.25)"/>
+  <g class="flames"><path d="M43,200 Q51,232 59,200Z" fill="#ffb703"/><path d="M61,200 Q69,232 77,200Z" fill="#ffb703"/>
+    <path d="M47,200 Q51,218 55,200Z" fill="#fb5607"/><path d="M65,200 Q69,218 73,200Z" fill="#fb5607"/></g>
   <g class="headpart hair-back" fill="${c.hair}">${hs.back}</g>
   ${o.legs}
   <g class="bodypart">
@@ -135,6 +148,8 @@
     <ellipse cx="60" cy="58" rx="34" ry="32" fill="${c.skin}"/>
     <g class="face">
       <g class="blush" fill="#ff7f9c"><ellipse cx="40" cy="72" rx="6" ry="3.4"/><ellipse cx="80" cy="72" rx="6" ry="3.4"/></g>
+      <path class="blush-lines" d="M37,70 L35,74 M41,70 L39,74 M45,70 L43,74 M77,70 L75,74 M81,70 L79,74 M85,70 L83,74"
+        stroke="#ff5c86" stroke-width="1.4" stroke-linecap="round"/>
       <g class="brows" stroke="${shade(c.hair, -0.1)}" stroke-width="2.4" stroke-linecap="round" fill="none">
         <path d="M41,51 Q47,48 52,51"/><path d="M68,51 Q73,48 79,51"/></g>
       <g class="eyes">
@@ -146,10 +161,17 @@
           <path d="M42,64 Q47,57 52,64"/><path d="M68,64 Q73,57 78,64"/></g>
         <g class="e e-closed" stroke="${ink}" stroke-width="2.4" stroke-linecap="round" fill="none">
           <path d="M42,61 Q47,66 52,61"/><path d="M68,61 Q73,66 78,61"/></g>
+        <g class="e e-puppy"><ellipse cx="47" cy="62" rx="5.8" ry="7" fill="${ink}"/><ellipse cx="73" cy="62" rx="5.8" ry="7" fill="${ink}"/>
+          <circle cx="49.4" cy="59" r="2.4" fill="#fff"/><circle cx="75.4" cy="59" r="2.4" fill="#fff"/>
+          <circle cx="45" cy="65.4" r="1.2" fill="#fff"/><circle cx="71" cy="65.4" r="1.2" fill="#fff"/></g>
+        <g class="e e-half"><path d="M42,61.5 L52,61.5 M68,61.5 L78,61.5" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>
+          <ellipse cx="47" cy="64.2" rx="3.6" ry="2.6" fill="${ink}"/><ellipse cx="73" cy="64.2" rx="3.6" ry="2.6" fill="${ink}"/></g>
         <g class="e e-heart" fill="#ff3d6e">
           <path d="M47,67 L41.5,61.5 A3.2,3.2 0 0 1 47,57.6 A3.2,3.2 0 0 1 52.5,61.5Z"/>
           <path d="M73,67 L67.5,61.5 A3.2,3.2 0 0 1 73,57.6 A3.2,3.2 0 0 1 78.5,61.5Z"/></g>
       </g>
+      <g class="tears" fill="#8fdcff"><path class="tear" d="M43,69 Q40.5,74 43,76.5 Q45.5,74 43,69Z"/>
+        <path class="tear" d="M77,69 Q74.5,74 77,76.5 Q79.5,74 77,69Z"/></g>
       ${c.glasses ? `<g class="glasses" stroke="${ink}" stroke-width="2" fill="rgba(255,255,255,.18)">
         <rect x="37" y="54" width="20" height="16" rx="6"/><rect x="63" y="54" width="20" height="16" rx="6"/>
         <path d="M57,61 Q60,58 63,61" fill="none"/></g>` : ''}
@@ -161,6 +183,9 @@
         <ellipse class="m m-o" cx="60" cy="78" rx="3.4" ry="4.4" fill="${ink}"/>
         <path class="m m-flat" d="M55,78 L65,78" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>
         <path class="m m-sad" d="M54,80 Q60,74 66,80" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+ <path class="m m-wobble" d="M53,80 Q56.5,76.5 60,80 Q63.5,83.5 67,80" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        <path class="m m-smirk" d="M54,78 Q61,80.5 67,75" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        <path class="m m-cat" d="M53,76 Q56.5,80.5 60,76 Q63.5,80.5 67,76" stroke="${ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/>
         <ellipse class="m m-talk" cx="60" cy="78" rx="4.6" ry="3.6" fill="${ink}"/>
       </g>
     </g>
@@ -177,10 +202,19 @@
     excited:   { eyes: 'happy',  mouth: 'laugh', anim: 'bounce', fx: ['✨', '⭐', '✨'] },
     laugh:     { eyes: 'happy',  mouth: 'laugh', anim: 'laugh',  fx: ['ha', 'ha!', '😂'] },
     love:      { eyes: 'heart',  mouth: 'grin',  anim: 'sway',   fx: ['💕', '💗', '💖'] },
-    shy:       { eyes: 'closed', mouth: 'smile', anim: 'shy',    fx: ['🙈'] },
+    shy:       { eyes: 'closed', mouth: 'cat',   anim: 'shy',    fx: ['🙈'] },
     surprised: { eyes: 'wide',   mouth: 'o',     anim: 'jump',   fx: ['!'] },
     think:     { eyes: 'normal', mouth: 'flat',  anim: 'think',  fx: ['?'] },
-    sad:       { eyes: 'closed', mouth: 'sad',   anim: 'droop',  fx: ['💧'] },
+    sad:       { eyes: 'puppy',  mouth: 'wobble', anim: 'sob',   min: 2600 },
+    cry:       { eyes: 'puppy',  mouth: 'wobble', anim: 'sob',   min: 2600 },
+    puppy:     { eyes: 'puppy',  mouth: 'smile', anim: 'puppy',  fx: ['🥺'] },
+    blush:     { eyes: 'closed', mouth: 'cat',   anim: 'shy',    fx: ['💗', '💕'] },
+    jump:      { eyes: 'happy',  mouth: 'laugh', anim: 'bigjump', fx: ['✨', '💖', '✨'], min: 1500 },
+    rocket:    { eyes: 'happy',  mouth: 'laugh', anim: 'rocket', fx: ['🚀'], min: 2900, sfx: 'whoosh' },
+    flowers:   { eyes: 'closed', mouth: 'smile', anim: 'offer',  fx: ['🌸', '💐'], min: 3000 },
+    chill:     { eyes: 'half',   mouth: 'smirk', anim: 'chill',  fx: ['♪', '♫'] },
+    giggle:    { eyes: 'happy',  mouth: 'cat',   anim: 'laugh',  fx: ['hehe'] },
+    spin:      { eyes: 'happy',  mouth: 'grin',  anim: 'spin',   fx: ['✨'], min: 900 },
     wave:      { eyes: 'happy',  mouth: 'grin',  anim: 'wave' },
     nod:       { eyes: 'normal', mouth: 'smile', anim: 'nod' },
     dance:     { eyes: 'happy',  mouth: 'grin',  anim: 'dance',  fx: ['🎵', '🎶'] },
@@ -205,6 +239,8 @@
       this.body.innerHTML = svg(this.cfg);
     }
     look(dir) { this.el.dataset.look = dir; }
+    // Something kept in hand across moods (her bouquet after she says yes).
+    hold(prop) { this.el.dataset.prop = prop || ''; }
     talking(on) { this.el.dataset.talking = on ? '1' : ''; }
     // Set a mood; it fades back to idle after `ms` unless another mood replaces it.
     mood(name, { ms = 2400, energy = 1, fx = true } = {}) {
@@ -216,8 +252,11 @@
       void this.body.offsetWidth;
       this.body.style.animation = '';
       if (fx && m.fx) this.burst(m.fx, Math.round(2 + energy * 2));
+      if (m.sfx) window.Meet.voice?.sfx(m.sfx);
+      this.busyUntil = Date.now() + (m.min || 0);
       clearTimeout(this._t);
-      if (name !== 'idle' && ms) this._t = setTimeout(() => this.mood('idle'), ms);
+      // Big moves (rocket, crying, flowers) must finish even if the line is short.
+      if (name !== 'idle' && ms) this._t = setTimeout(() => this.mood('idle'), Math.max(ms, m.min || 0));
     }
     burst(symbols, n = 3) {
       for (let i = 0; i < n; i++) {
@@ -258,13 +297,18 @@
     else if (/🤔|\bhm+\b|\bmaybe\b|\bidk\b|\bnot sure\b/.test(s) || /\?\s*$/.test(t)) mood = 'think';
     else if (/^(ok|okay|k|hm+|fine|sure|cool)\.?$/.test(s.trim())) mood = 'neutral';
     else if (bangs || caps) mood = 'excited';
+    const positive = /\b(yes+|yea+h?|yep|yup|sure|of course|why not|would love|i'?d love|sounds (good|fun|nice)|okay|ok|definitely|absolutely|let'?s go)\b|💖|🥰|😍/.test(s)
+      && !/\bnot\b|\bno\b/.test(s);
     const energy = Math.min(2, 0.7 + bangs * 0.25 + emoji * 0.15 + (caps ? 0.5 : 0) + (t.length > 80 ? 0.2 : 0));
-    return { mood, energy };
+    if (mood === 'excited' && energy >= 1.5) mood = 'rocket';
+    if (mood === 'sad') mood = 'cry';
+    return { mood, energy, positive };
   }
 
   // How the *other* avatar reacts while listening.
-  const REACT = { laugh: 'laugh', love: 'shy', shy: 'love', surprised: 'surprised', sad: 'sad',
-    think: 'think', neutral: 'nod', excited: 'excited', happy: 'happy' };
+  // Sad gets puppy eyes back, a crush gets a blush, big energy gets a jump.
+  const REACT = { laugh: 'giggle', love: 'blush', shy: 'blush', surprised: 'surprised', sad: 'puppy', cry: 'puppy',
+    think: 'think', neutral: 'chill', excited: 'jump', rocket: 'jump', happy: 'happy' };
 
   window.Meet = Object.assign(window.Meet || {}, { Avatar, detectMood, REACT, HAIR, OUTFITS, shade, svg });
 })();

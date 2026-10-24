@@ -1,8 +1,10 @@
 // Everything personal lives here: how tiny-you looks, what you say, and the
 // conversation script. Edit freely — no build step, just reload.
 //
-// Script lines are [text, mood]. Moods: happy, excited, laugh, love, shy,
-// surprised, think, sad, wave, nod, dance, neutral. {name} becomes her name.
+// Script lines are [text, mood]. Moods: happy, excited, laugh, giggle, love,
+// shy, blush, surprised, think, cry, puppy, chill, jump, rocket, flowers, wave,
+// nod, dance, spin, neutral. Leave the mood out to guess it from the text.
+// {name} becomes her name.
 window.MEETCUTE = {
   me: {
     name: 'Ayush',
@@ -18,6 +20,9 @@ window.MEETCUTE = {
     },
   },
 
+  // Squeaky mini voices: base pitch in Hz. Higher = tinier.
+  voices: { me: { pitch: 470 }, her: { pitch: 660 } },
+
   // The opening lines, typed out one by one before anything else happens.
   intro: [
     'hey you 👋',
@@ -29,8 +34,8 @@ window.MEETCUTE = {
 
   script: {
     start: {
-      say: [['hiii {name}! 👋', 'wave'], ["I'm Ayush. well, a tiny version of him", 'happy'],
-        ['the real one is standing right in front of you, probably nervous 😅', 'shy']],
+      say: [['oh. hey {name} 👋', 'chill'], ["I'm Ayush. the pocket-sized edition", 'happy'],
+        ['the full-size one is right in front of you, pretending to be calm 😅', 'blush']],
       next: 'qr',
     },
     qr: {
@@ -43,12 +48,12 @@ window.MEETCUTE = {
       any: 'cute',
     },
     toomuch: { say: [['haha fair 😂', 'laugh'], ['in my defence, my pickup lines are worse', 'shy']], next: 'about' },
-    cute: { say: [['okay that made tiny me blush 🙈', 'shy'], ['real me is doing a little dance inside', 'dance']], next: 'about' },
+    cute: { say: [['oh. cool. cool cool cool', 'chill'], ['(tiny me is screaming internally)', 'rocket']], next: 'about' },
     who: { say: [['apparently… me 😂', 'laugh'], ['a guy who builds things instead of using normal words', 'happy']], next: 'about' },
 
     about: {
-      say: [['quick facts about me:', 'excited'], ['I build software, mostly things that run on servers you never see', 'happy'],
-        ['and occasionally websites for strangers I want to talk to', 'shy']],
+      say: [['quick facts about me:', 'chill'], ['I build software, mostly things that run on servers you never see', 'happy'],
+        ['and occasionally websites for strangers I want to talk to. no big deal', 'chill']],
       next: 'her',
     },
     her: {
@@ -66,15 +71,17 @@ window.MEETCUTE = {
     heard: { say: [['that sounds nice 🙂', 'happy']], next: 'ask' },
 
     ask: {
-      say: [['okay. being brave now…', 'shy'], ['would you want to grab a coffee with me sometime? ☕', 'love']],
-      options: [
-        { text: 'yes ☕', next: 'yes' },
-        { text: 'maybe — talk more first', next: 'maybe' },
-        { text: 'I’m seeing someone', next: 'taken' },
-        { text: 'not interested, sorry', next: 'no' },
-      ],
+      say: [['okay. being brave now…', 'blush'], ['I got you something 💐', 'flowers']],
+      // Floats mid-screen. "maybe" runs away `dodges.length` times, then gives
+      // up and works. Typing "no" or "I'm seeing someone" always ends kindly.
+      bigAsk: {
+        text: 'would you go on a little coffee date with me? ☕',
+        yes: { text: 'yes 💖', next: 'yes' },
+        maybe: { text: 'maybe', next: 'maybe', dodges: ['maybe? 🤨', 'nope 🙈', 'you sure? 🥺'], giveUp: 'fine… maybe 🙄' },
+        fineprint: 'not your thing? just type no — tiny me will survive 🥲',
+      },
     },
-    yes: { say: [['wait really?! 🥹', 'surprised'], ['okay okay, staying calm', 'dance'],
+    yes: { say: [['WAIT REALLY?! 🥹', 'rocket'], ['…ahem. I mean. cool. 😎', 'chill'],
       ['leave your number or insta and I’ll text you (normally, promise)', 'happy']], contact: true, next: 'thanks' },
     maybe: { say: [['totally fair 🙂', 'nod'], ['you can type anything here — real me is reading it', 'happy'],
       ['or leave your insta and we can talk later, no pressure', 'shy']], contact: true, next: 'thanks' },

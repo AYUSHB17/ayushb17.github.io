@@ -5,6 +5,9 @@
   const C = window.MEETCUTE;
   const { Stage, Avatar, net } = window.Meet;
   const $ = (id) => document.getElementById(id);
+  // Your phone starts silent: you're standing next to her.
+  Meet.voice.configure({ key: 'mc-muted-me', defaultMuted: true });
+  Meet.voice.button($('mute'));
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
   const sessions = new Map(); // sid → session (+ online, typing)
@@ -187,8 +190,9 @@
 
   // ------------------------------------------------------------ sending
 
-  const EMOTES = [['👋', 'wave'], ['😂', 'laugh'], ['🥰', 'love'], ['🙈', 'shy'], ['😮', 'surprised'],
-    ['🤔', 'think'], ['💃', 'dance'], ['🥺', 'sad']];
+  const EMOTES = [['💐', 'flowers'], ['👋', 'wave'], ['🦘', 'jump'], ['🚀', 'rocket'], ['😳', 'blush'],
+    ['🥺', 'puppy'], ['😭', 'cry'], ['😏', 'chill'], ['😂', 'laugh'], ['🥰', 'love'], ['💃', 'dance'],
+    ['😮', 'surprised'], ['🤔', 'think']];
   for (const [icon, emote] of EMOTES) {
     const b = document.createElement('button');
     b.className = 'chip';

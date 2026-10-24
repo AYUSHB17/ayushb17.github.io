@@ -12,6 +12,7 @@
   const fill = (t) => t.replace(/\{name\}/g, state.her?.name || 'you');
 
   $('meName').textContent = $('meName2').textContent = C.me.name;
+  Meet.voice.button($('mute'));
   sprinkleSky();
 
   // ------------------------------------------------------------ session
@@ -63,9 +64,75 @@
     me.mood('wave', { ms: 2000 });
     await wait(500);
     $('introActions').hidden = false;
+    dodgy($('notToday'), {
+      labels: ['not today? 🤨', 'nope, try again 🙈', 'you sure? 🥺'],
+      giveUp: 'okay fine… not today 🥲',
+      onDodge: (n) => {
+        // Grow the text, not the box: the button is already full width.
+        $('curious').style.fontSize = 18 + n * 4 + 'px';
+        stage.me.mood(['puppy', 'cry', 'puppy'][n - 1] || 'puppy', { ms: 1800 });
+      },
+    });
+  }
+
+  // A button that runs away from her finger a few times, then gives up and
+  // works. The joke lands and she still has a real way out.
+  function dodgy(btn, { labels, giveUp, onDodge }) {
+    let n = 0;
+    let swallowUntil = 0;
+    btn.classList.add('dodgy');
+    let last = 0;
+    const flee = (e) => {
+      if (n >= labels.length) return false;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      // A tap fires pointerdown and then a compatibility mouseenter: one dodge, not two.
+      if (performance.now() - last < 400) return true;
+      last = performance.now();
+      const r = btn.getBoundingClientRect();
+      if (!btn.classList.contains('flying')) {
+        // Out of its container so it can fly anywhere on the screen.
+        document.body.appendChild(btn);
+        btn.classList.add('flying');
+        btn.style.left = r.left + 'px';
+        btn.style.top = r.top + 'px';
+        void btn.offsetWidth;
+      }
+      const W = innerWidth;
+      const H = innerHeight;
+      let x;
+      let y;
+      let tries = 0;
+      do {
+        x = 12 + Math.random() * Math.max(10, W - r.width - 24);
+        y = 70 + Math.random() * Math.max(10, H * 0.62 - r.height);
+      } while (Math.hypot(x - r.left, y - r.top) < 150 && ++tries < 25);
+      btn.style.left = x + 'px';
+      btn.style.top = y + 'px';
+      btn.textContent = labels[n++];
+      if (n === labels.length) setTimeout(() => { btn.textContent = giveUp; }, 900);
+      // The finger lifts where the button used to be; don't let that land on something else.
+      swallowUntil = performance.now() + 500;
+      Meet.voice.sfx('nope');
+      onDodge?.(n);
+      return true;
+    };
+    btn.addEventListener('pointerdown', flee);
+    btn.addEventListener('mouseenter', flee);
+    // Keyboard "clicks" skip pointerdown; count them as dodges too.
+    btn.addEventListener('click', (e) => {
+      // The tap that triggered the last dodge also produces a click on the
+      // still-sliding button; it must not count as choosing it.
+      if (performance.now() < swallowUntil) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+      if (n < labels.length) flee(e);
+    }, true);
+    document.addEventListener('click', (e) => {
+      if (performance.now() < swallowUntil && e.target !== btn) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
   }
 
   $('curious').onclick = async () => {
+    $('notToday').remove();
     $('intro').hidden = true;
     const me = stage.me;
     me.el.classList.remove('peek');
@@ -76,10 +143,13 @@
 
   $('notToday').onclick = async () => {
     send('leave');
+    $('notToday').remove();
     $('introActions').hidden = true;
     const box = $('introText');
     box.innerHTML = '<p>totally fair 🙂</p><p>have a lovely day ✨</p>';
     stage.me.el.classList.remove('peek');
+    stage.me.mood('cry', { ms: 2200 });
+    await wait(2300);
     await stage.me.walkTo('70%', 800);
     stage.me.mood('wave', { ms: 0 });
   };
@@ -157,6 +227,7 @@
       $('thumb').src = url;
       $('thumb').hidden = false;
       changed('love');
+      Meet.voice.sfx('sparkle');
       stage.me?.mood('surprised', { energy: 1.1 });
     };
     img.src = url;
@@ -220,6 +291,7 @@
     if (fresh) {
       her.el.classList.add('pop');
       her.el.style.left = POS.HER_X;
+      Meet.voice.sfx('sparkle');
       await wait(500);
       her.mood('excited', { energy: 1.3 });
       await me.walkTo(POS.ME_X, 1000);
@@ -238,6 +310,9 @@
     options([]);
     for (const [text, mood] of node.say || []) {
       if (token !== state.run) return;
+      // Let a rocket land (or a cry finish) before the next line starts.
+      await wait(Math.max(0, (stage.me.busyUntil || 0) - Date.now()));
+      if (token !== state.run) return;
       stage.typing('me', true);
       await wait(500 + Math.min(900, text.length * 18));
       if (token !== state.run) return stage.typing('me', false);
@@ -247,7 +322,8 @@
       log('me', line);
     }
     if (token !== state.run) return;
-    if (node.contact) contactForm(node.next);
+    if (node.bigAsk) bigAsk(node.bigAsk);
+    else if (node.contact) contactForm(node.next);
     else if (node.options) options(node.options.map((o) => ({ text: o.text, go: o.next })));
     else if (node.bye) { stage.me.mood('wave', { ms: 3000 }); stage.her?.mood('wave', { ms: 3000 }); }
     else if (node.next && !node.end) run(node.next);
@@ -266,6 +342,64 @@
       b.onclick = () => { if (performance.now() - shownAt > 600) herSays(o.text, 'choice', o.go); };
       box.appendChild(b);
     }
+  }
+
+  // The date question floats in the middle of the screen while tiny-him
+  // holds out flowers. "maybe" runs away a few times; "yes" gets bigger.
+  function bigAsk(q) {
+    const wrap = document.createElement('div');
+    wrap.className = 'bigask';
+    wrap.innerHTML = `<div class="bigask-card"><span class="big-emoji">💐</span><h2></h2>
+      <div class="bigask-btns"><button class="btn primary grow" data-a="yes"></button>
+      <button class="btn ghost" data-a="maybe"></button></div><p class="fineprint"></p></div>`;
+    wrap.querySelector('h2').textContent = fill(q.text);
+    wrap.querySelector('.fineprint').textContent = q.fineprint || '';
+    const yes = wrap.querySelector('[data-a=yes]');
+    const maybe = wrap.querySelector('[data-a=maybe]');
+    yes.textContent = q.yes.text;
+    maybe.textContent = q.maybe.text;
+    document.body.appendChild(wrap);
+    Meet.voice.sfx('sparkle');
+    stage.me.mood('flowers', { ms: 0 });
+    const close = () => { wrap.remove(); maybe.remove(); state.closeAsk = null; };
+    state.closeAsk = close;
+    dodgy(maybe, {
+      labels: q.maybe.dodges,
+      giveUp: q.maybe.giveUp,
+      onDodge: (n) => {
+        yes.style.transform = `scale(${1 + n * 0.18})`;
+        stage.me.mood(n === 2 ? 'cry' : 'puppy', { ms: 1600 });
+        setTimeout(() => { if (wrap.isConnected) stage.me.mood('flowers', { ms: 0 }); }, 1700);
+      },
+    });
+    yes.onclick = () => {
+      close();
+      confetti();
+      stage.me.hold('');
+      stage.her.hold('flowers');
+      herSays(q.yes.text, 'choice', q.yes.next);
+    };
+    maybe.onclick = () => {
+      close();
+      herSays(maybe.textContent, 'choice', q.maybe.next);
+    };
+  }
+
+  function confetti(n = 46) {
+    const bits = ['💖', '💕', '🌸', '✨', '💐', '🎉', '💗'];
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('span');
+      c.className = 'confetti';
+      c.textContent = pick(bits);
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.setProperty('--dx', (Math.random() * 160 - 80).toFixed(0) + 'px');
+      c.style.setProperty('--rot', (Math.random() * 720 - 360).toFixed(0) + 'deg');
+      c.style.animationDuration = (2.2 + Math.random() * 1.6).toFixed(2) + 's';
+      c.style.animationDelay = (Math.random() * 0.6).toFixed(2) + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4800);
+    }
+    Meet.voice.sfx('sparkle');
   }
 
   function contactForm(next) {
@@ -291,6 +425,8 @@
     $('skip').onclick = () => { box.innerHTML = ''; if (!state.live) run('chat'); };
   }
 
+  const REJECT = /\b(not interested|no thanks|no thank you|seeing someone|have a (boy|girl)friend|i'?m taken|married|leave me alone|go away)\b/i;
+
   async function herSays(text, kind = 'msg', go) {
     const { mood, energy } = detectMood(text);
     send(kind, { text, mood });
@@ -298,9 +434,15 @@
     state.run++; // a reply from her always cuts off whatever tiny-him was saying
     await stage.say('her', text, mood, energy);
     log('her', text);
-    if (state.live) return;
+    if (state.live) { if (REJECT.test(text)) state.closeAsk?.(); return; }
     const node = C.script[state.node];
     if (go) return run(go);
+    // However the script is going, a clear no ends it kindly.
+    const no = REJECT.test(text) || (/^\s*(no+|nope|nah)\b/i.test(text) && ['ask', 'yes', 'maybe'].includes(state.node));
+    if (no) {
+      state.closeAsk?.();
+      return run(/someone|friend|taken|married/i.test(text) ? 'taken' : 'no');
+    }
     if (node?.any && node.options) return run(node.any);
     // Free text outside a question: tiny-him answers from the reply pool,
     // then puts the question back if one was open.

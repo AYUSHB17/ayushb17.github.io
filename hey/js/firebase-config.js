@@ -13,3 +13,6 @@ window.MEETCUTE_FIREBASE = {
 };
 // Until the database exists, stay on the local server rather than half-working.
 if (!window.MEETCUTE_FIREBASE.databaseURL) window.MEETCUTE_FIREBASE = null;
+// Add ?local to the URL to test against the local Node server instead of the
+// real database (keeps test conversations out of Firebase).
+if (/[?&]local\b/.test(location.search)) window.MEETCUTE_FIREBASE = null;
