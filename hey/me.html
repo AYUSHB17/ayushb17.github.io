@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#1a1033">
+  <meta name="robots" content="noindex">
+  <title>meetcute · me</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎛️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/me.css">
+</head>
+<body class="me-page">
+  <div class="sky" aria-hidden="true"></div>
+
+  <section id="login" class="screen center" hidden>
+    <form class="card narrow" id="loginForm">
+      <h1>hey you 🎛️</h1>
+      <p class="sub" id="loginHint">paste the key from <code>.admin-key</code> on the server</p>
+      <input class="field" id="key" type="password" autocomplete="current-password" placeholder="key">
+      <button class="btn primary wide" id="loginBtn">in</button>
+      <p class="err" id="loginErr"></p>
+    </form>
+  </section>
+
+  <!-- list of everyone who scanned -->
+  <section id="list" class="screen" hidden>
+    <header class="topbar">
+      <span><b>meetcute</b> <span class="dot" id="conn"></span></span>
+      <button class="btn small primary" id="showQr">show QR</button>
+    </header>
+    <div class="cards" id="cards"></div>
+    <p class="empty" id="empty">nobody yet. show her the QR 😄</p>
+  </section>
+
+  <!-- one conversation, same little scene she sees -->
+  <section id="convo" class="screen" hidden>
+    <header class="topbar">
+      <button class="btn small ghost" id="back">←</button>
+      <span><b id="cName"></b> <span class="dot" id="cOnline"></span></span>
+      <label class="switch"><input type="checkbox" id="liveToggle"><span>live</span></label>
+    </header>
+    <div class="contact-card" id="cContact" hidden></div>
+    <div class="log" id="cLog"></div>
+    <div class="stage-slot"><div class="stage" id="stage"><div class="ground"></div></div></div>
+    <div class="status" id="cStatus"></div>
+    <div class="chips emotes" id="emotes"></div>
+    <div class="chips quick" id="quick"></div>
+    <form class="composer" id="composer" autocomplete="off">
+      <input id="msg" class="field" placeholder="say it as tiny you…" maxlength="500" enterkeyhint="send">
+      <button class="btn send" aria-label="send">➤</button>
+    </form>
+  </section>
+
+  <div id="qr" class="qr-overlay" hidden>
+    <div class="qr-card">
+      <p class="qr-top">psst… scan me 👀</p>
+      <div id="qrCode"></div>
+      <p class="qr-bottom">I made you something ✨</p>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/avatar.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script src="js/net-firebase.js"></script>
+  <script src="js/net.js"></script>
+  <script src="js/stage.js"></script>
+  <script src="js/me.js"></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#1a1033">
+  <title>hey you 👋</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💌</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="her">
+  <div class="sky" aria-hidden="true"></div>
+
+  <!-- 1. intro: typed lines, tiny-you peeking from the edge -->
+  <section id="intro" class="screen">
+    <div class="intro-text" id="introText" aria-live="polite"></div>
+    <div class="intro-actions" id="introActions" hidden>
+      <button class="btn primary" id="curious">okay, I’m curious 👀</button>
+      <button class="btn ghost" id="notToday">not today 🙂</button>
+    </div>
+  </section>
+
+  <!-- 2. make a tiny her -->
+  <section id="maker" class="screen" hidden>
+    <div class="card maker">
+      <h1>let’s make a tiny you</h1>
+      <p class="sub">so you can meet tiny me 🙂</p>
+      <div class="maker-top">
+        <div class="preview" id="preview"></div>
+        <div class="maker-main">
+          <label class="btn selfie" for="photo">📸 snap a selfie</label>
+          <input id="photo" type="file" accept="image/*" capture="user" hidden>
+          <img id="thumb" class="thumb" alt="" hidden>
+          <input id="name" class="field" placeholder="your name" maxlength="30" autocomplete="given-name" enterkeyhint="done">
+        </div>
+      </div>
+      <p class="fine">your photo never leaves your phone — it only picks your colours.</p>
+      <div class="row"><span>hair</span><div class="chips" id="hairStyles"></div></div>
+      <div class="row"><span>outfit</span><div class="chips" id="outfits"></div></div>
+      <div class="row"><span>skin</span><div class="swatches" id="skins"></div></div>
+      <div class="row"><span>hair colour</span><div class="swatches" id="hairs"></div></div>
+      <div class="row"><span>outfit colour</span><div class="swatches" id="outfitColors"></div></div>
+      <label class="toggle"><input type="checkbox" id="glasses"> glasses 👓</label>
+      <button class="btn primary wide" id="makeMe" disabled>that’s me ✨</button>
+    </div>
+  </section>
+
+  <!-- 3. the scene: both of you, facing each other, chatting -->
+  <section id="scene" class="screen" hidden>
+    <header class="topbar">
+      <span>💌 <b id="meName"></b> &amp; <b id="herName"></b></span>
+      <span class="live" id="liveBadge" hidden>● live</span>
+    </header>
+    <div class="log" id="log" aria-live="polite"></div>
+    <div class="stage-slot" id="stageSlot"></div>
+    <div class="hint" id="hint">messages you send here go to real <span id="meName2"></span></div>
+    <div class="chips options" id="options"></div>
+    <form class="composer" id="composer" autocomplete="off">
+      <input id="msg" class="field" placeholder="say something…" maxlength="500" enterkeyhint="send">
+      <button class="btn send" aria-label="send">➤</button>
+    </form>
+  </section>
+
+  <!-- the ground both avatars stand on: the bottom edge of her phone -->
+  <div class="stage" id="stage"><div class="ground"></div></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/avatar.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script src="js/net-firebase.js"></script>
+  <script src="js/net.js"></script>
+  <script src="js/stage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
