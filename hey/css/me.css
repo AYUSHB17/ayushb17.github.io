@@ -4,7 +4,7 @@
 .narrow { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; }
 .narrow h1 { margin: 0; }
 .err { color: #ff9cb8; min-height: 1em; margin: 0; }
-code { background: rgba(255, 255, 255, .12); padding: 1px 6px; border-radius: 6px; }
+code { background: rgba(var(--tint), .12); padding: 1px 6px; border-radius: 6px; }
 .btn.small { padding: 8px 14px; font-size: 15px; }
 
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #776b88; vertical-align: middle; }

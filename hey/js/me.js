@@ -89,13 +89,14 @@
     if (ev.type === 'join') { stage.place('her', s.her.avatar); stage.her.mood('excited'); }
     else if ((ev.type === 'msg' || ev.type === 'choice') && ev.from !== 'me') {
       stage.typing('her', false);
+      stage.closer();
       stage.say('her', ev.text, ev.mood || undefined);
       addLine('her', ev.text, ev.type === 'choice');
     } else if (ev.type === 'msg') {
       stage.say('me', ev.text, ev.mood || undefined);
       addLine(ev.from, ev.text);
     } else if (ev.type === 'emote') stage.me.mood(ev.emote, { energy: 1.2 });
-    else if (ev.type === 'contact') { stage.her?.mood('shy'); stage.me.mood('excited', { energy: 1.8 }); }
+    else if (ev.type === 'contact') { stage.setDistance(1); stage.her?.mood('shy'); stage.me.mood('excited', { energy: 1.8 }); }
     else if (ev.type === 'leave') stage.me.mood('wave');
     status();
   }
@@ -150,6 +151,9 @@
     else if (stage.her) { stage.her.el.remove(); stage.her = null; }
     $('cLog').innerHTML = '';
     for (const m of s.messages) addLine(m.from, m.text, m.choice);
+    // Same closeness she sees: one step per reply of hers.
+    const replies = s.messages.filter((m) => m.from === 'her').length;
+    stage.setDistance(s.contact ? 1 : Math.min(0.85, replies * 0.2), { walk: false });
     renderHeader();
     status();
   }

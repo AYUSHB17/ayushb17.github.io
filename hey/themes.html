@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>meetcute themes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: dark; --bg: #120b24; --text: #f6efff; --muted: #b7a8cc; --line: rgba(255, 255, 255, .14); --accent: #ff7aa8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Fredoka', system-ui, sans-serif; padding: 24px 16px 48px; }
+    header { max-width: 1240px; margin: 0 auto 18px; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+    h1 { margin: 0; font-size: 28px; }
+    header p { margin: 4px 0 0; color: var(--muted); }
+    .tabs { display: flex; gap: 6px; background: rgba(255, 255, 255, .06); padding: 4px; border-radius: 999px; }
+    .tabs button { border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 600; padding: 8px 16px; border-radius: 999px; cursor: pointer; }
+    .tabs button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+    .grid { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 22px; }
+    .card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .phone { width: 225px; height: 444px; border-radius: 30px; padding: 6px; background: #000; border: 1px solid var(--line); box-shadow: 0 20px 50px rgba(0, 0, 0, .45); overflow: hidden; }
+    .phone .screen { width: 375px; height: 720px; transform: scale(.568); transform-origin: 0 0; border-radius: 40px; overflow: hidden; }
+    iframe { width: 375px; height: 720px; border: 0; display: block; background: #fff; }
+    .name { font-weight: 700; font-size: 18px; }
+    .name code { font-family: ui-monospace, monospace; font-size: 13px; color: var(--accent); background: rgba(255, 122, 168, .12); padding: 2px 7px; border-radius: 6px; margin-left: 4px; }
+    .desc { color: var(--muted); font-size: 14px; text-align: center; max-width: 240px; margin: -4px 0 0; }
+    .open { color: var(--muted); font-size: 13px; }
+    .open a { color: var(--text); }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>pick a look 🎨</h1>
+      <p>Each phone is the real page in demo mode. Tell me the name in pink.</p>
+    </div>
+    <div class="tabs" role="group" aria-label="which moment">
+      <button data-demo="intro">intro</button>
+      <button data-demo="chat" aria-pressed="true">chat</button>
+      <button data-demo="ask">date question</button>
+    </div>
+  </header>
+  <main class="grid" id="grid"></main>
+  <script>
+    const THEMES = [
+      ['midnight', 'Midnight', 'Starry purple dusk, pink glow. The current look.'],
+      ['cafe', 'Café', 'Warm cream and coffee, fairy lights, wooden floor, serif titles.'],
+      ['pixel', 'Pixel arcade', '8-bit neon, pixel font, square bubbles, scanlines.'],
+      ['park', 'Sunny park', 'Blue sky, sunshine, butterflies, grass with little flowers.'],
+      ['scrapbook', 'Scrapbook', 'Notebook paper, handwriting, sketchy borders, taped bubbles.'],
+      ['glass', 'Glass', 'Clean and minimal: white, pastel blobs, frosted glass, violet.'],
+    ];
+    const grid = document.getElementById('grid');
+    let demo = 'chat';
+    function render() {
+      grid.innerHTML = '';
+      for (const [key, name, desc] of THEMES) {
+        const card = document.createElement('section');
+        card.className = 'card';
+        const src = `./?theme=${key}&demo=${demo}`;
+        card.innerHTML = `<div class="phone"><div class="screen"><iframe loading="lazy" title="${name}" src="${src}"></iframe></div></div>
+          <div class="name">${name}<code>${key}</code></div><p class="desc">${desc}</p>
+          <div class="open"><a href="${src}" target="_blank" rel="noopener">open full size ↗</a></div>`;
+        grid.appendChild(card);
+      }
+    }
+    for (const b of document.querySelectorAll('.tabs button')) {
+      b.onclick = () => {
+        demo = b.dataset.demo;
+        for (const x of document.querySelectorAll('.tabs button')) x.setAttribute('aria-pressed', String(x === b));
+        render();
+      };
+    }
+    render();
+  </script>
+</body>
+</html>

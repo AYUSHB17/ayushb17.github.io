@@ -20,6 +20,10 @@ window.MEETCUTE = {
     },
   },
 
+  // Look of both pages: midnight | cafe | pixel | park | scrapbook | glass.
+  // Preview them all at /themes.html.
+  theme: 'midnight',
+
   // Squeaky mini voices: base pitch in Hz. Higher = tinier.
   voices: { me: { pitch: 470 }, her: { pitch: 660 } },
 

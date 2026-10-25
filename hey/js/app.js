@@ -377,6 +377,7 @@
       confetti();
       stage.me.hold('');
       stage.her.hold('flowers');
+      stage.setDistance(1);
       herSays(q.yes.text, 'choice', q.yes.next);
     };
     maybe.onclick = () => {
@@ -432,14 +433,17 @@
     send(kind, { text, mood });
     if (kind === 'choice') options([]);
     state.run++; // a reply from her always cuts off whatever tiny-him was saying
+    const rejecting = REJECT.test(text) ||
+      (/^\s*(no+|nope|nah)\b/i.test(text) && ['ask', 'yes', 'maybe'].includes(state.node));
+    // Every reply brings them a step closer; a no sends tiny-him back to a polite distance.
+    await (rejecting ? stage.setDistance(0) : stage.closer());
     await stage.say('her', text, mood, energy);
     log('her', text);
     if (state.live) { if (REJECT.test(text)) state.closeAsk?.(); return; }
     const node = C.script[state.node];
     if (go) return run(go);
     // However the script is going, a clear no ends it kindly.
-    const no = REJECT.test(text) || (/^\s*(no+|nope|nah)\b/i.test(text) && ['ask', 'yes', 'maybe'].includes(state.node));
-    if (no) {
+    if (rejecting) {
       state.closeAsk?.();
       return run(/someone|friend|taken|married/i.test(text) ? 'taken' : 'no');
     }
@@ -497,9 +501,11 @@
       s.style.animationDelay = (Math.random() * 4).toFixed(2) + 's';
       sky.appendChild(s);
     }
-    for (let i = 0; i < 8; i++) {
+    const floaters = getComputedStyle(document.documentElement).getPropertyValue('--floaters')
+      .replace(/['"]/g, '').trim().split(/\s+/).filter(Boolean);
+    for (let i = 0; floaters.length && i < 8; i++) {
       const h = document.createElement('b');
-      h.textContent = pick(['♡', '♥', '✦']);
+      h.textContent = pick(floaters);
       h.style.left = Math.random() * 100 + '%';
       h.style.animationDelay = (Math.random() * 12).toFixed(1) + 's';
       h.style.animationDuration = (10 + Math.random() * 8).toFixed(1) + 's';
@@ -509,7 +515,35 @@
 
   // ------------------------------------------------------------ boot
 
+  // ?demo=intro | chat | ask: a frozen moment for previews (the theme
+  // gallery). No session, no network, nothing reaches Firebase.
+  async function demo(kind) {
+    if (kind === 'intro') {
+      stage.place('me', C.me.avatar, { left: '100%' }).el.classList.add('peek');
+      $('introText').innerHTML = C.intro.map((l) => `<p>${l.replace(/</g, '&lt;')}</p>`).join('');
+      $('introActions').hidden = false;
+      return;
+    }
+    $('intro').hidden = true;
+    state.her = { name: 'Riya', avatar: { skin: '#e7b48f', hair: '#2b1a12', hairStyle: 'ponytail', outfit: 'dress',
+      outfitColor: '#ff8fb0', pants: '#34405e', glasses: false } };
+    await enterScene(false);
+    stage.setDistance(0.5, { walk: false });
+    for (const [who, t] of [['me', 'oh. hey Riya 👋'], ['her', 'haha hi 😂'], ['me', 'so… is the QR thing too much?'],
+      ['her', 'no, it’s actually cute']]) log(who, t);
+    if (kind === 'ask') return bigAsk(C.script.ask.bigAsk);
+    const loop = [['me', 'I got you something 💐', 'flowers'], ['her', 'omg stop 🙈', 'blush'],
+      ['me', 'casual. very casual 😎', 'chill'], ['her', 'YESSS!!!', 'rocket']];
+    for (let i = 0; ; i = (i + 1) % loop.length) {
+      const [who, text, mood] = loop[i];
+      await stage.say(who, text, mood);
+      await wait(900);
+    }
+  }
+
   (async function boot() {
+    const demoKind = new URLSearchParams(location.search).get('demo');
+    if (demoKind !== null) return demo(demoKind || 'chat');
     const prev = restore();
     if (prev?.sid && prev.her) {
       // Reloaded mid-conversation: skip straight back to the scene.

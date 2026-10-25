@@ -6,8 +6,10 @@
   const { Avatar, detectMood, REACT } = window.Meet;
   const voice = () => window.Meet.voice;
 
-  const HER_X = '27%';
-  const ME_X = '73%';
+  // Start apart, end side by side; setDistance() moves between the two.
+  const HER_X = '22%';
+  const ME_X = '78%';
+  const NEAR = 21; // % each one moves from start to right next to each other
   const VOICES = Object.assign({ me: { pitch: 470 }, her: { pitch: 660 } }, window.MEETCUTE?.voices);
   const POKES = {
     me: [['giggle', 'hehe'], ['blush', 'oh! hi'], ['spin', 'wheee'], ['chill', 'mhm']],
@@ -36,6 +38,24 @@
       this.root.appendChild(a.el);
       this[who] = a;
       return a;
+    }
+
+    // 0 = where they start, 1 = right next to each other. They walk there.
+    setDistance(d, { walk = true } = {}) {
+      this.distance = Math.max(0, Math.min(1, d));
+      const to = { her: 22 + NEAR * this.distance + '%', me: 78 - NEAR * this.distance + '%' };
+      return Promise.all(['her', 'me'].map((who) => {
+        const a = this[who];
+        if (!a || a.el.style.left === to[who]) return null;
+        if (!walk) { a.el.style.left = to[who]; return null; }
+        return a.walkTo(to[who], 700);
+      }));
+    }
+
+    // One small step closer per reply, never all the way: that's for a yes.
+    closer(step = 0.2, max = 0.85) {
+      const now = this.distance || 0;
+      return this.setDistance(Math.max(now, Math.min(max, now + step)));
     }
 
     other(who) { return who === 'her' ? this.me : this.her; }
