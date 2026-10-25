@@ -23,6 +23,9 @@ window.MEETCUTE = {
   // Look of both pages: midnight | cafe | pixel | park | scrapbook | glass.
   // Preview them all at /themes.html.
   theme: 'midnight',
+  // How the avatars are drawn: chibi, anime, pixel, game, clay, sketch, storybook
+  // (compare them at /hey/avatars.html). ?art=name in a URL overrides it.
+  art: 'chibi',
 
   // Squeaky mini voices: base pitch in Hz. Higher = tinier.
   voices: { me: { pitch: 470 }, her: { pitch: 660 } },

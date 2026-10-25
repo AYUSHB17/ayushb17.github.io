@@ -1,0 +1,32 @@
+/* Art styles (see js/art.js). The extra parts avatar.js draws stay hidden
+   unless a style asks for them. */
+.av .k-anime, .av .k-real, .av .x-shade, .av .x-nose, .av .x-shine { display: none; }
+
+/* anime: big glossy eyes with lashes, a shine band on the hair, hatched blush */
+[data-art="anime"] .av .k-base { display: none; }
+[data-art="anime"] .av .k-anime, [data-art="anime"] .av .x-shine { display: inline; }
+[data-art="anime"] .av .blush { opacity: .55; }
+[data-art="anime"] .av .blush-lines { display: inline; opacity: .8; }
+[data-art="anime"] .av .brows { stroke-width: 1.6; }
+
+/* storybook: almond eyes with irises, a nose, soft shading on the face */
+[data-art="storybook"] .av .k-base { display: none; }
+[data-art="storybook"] .av .k-real, [data-art="storybook"] .av .x-shade,
+[data-art="storybook"] .av .x-nose { display: inline; }
+[data-art="storybook"] .av .x-shine { display: inline; opacity: .22; }
+[data-art="storybook"] .av .brows { stroke-width: 1.7; }
+[data-art="storybook"] .av .blush { opacity: .22; }
+[data-art="storybook"] .av .art-root { filter: saturate(.86) contrast(1.04); }
+
+/* filter styles */
+[data-art="pixel"] .av .art-root { filter: url(#art-pixel); }
+[data-art="pixel"] .av svg { shape-rendering: crispEdges; }
+[data-art="game"] .av .art-root { filter: url(#art-game); }
+[data-art="clay"] .av .art-root { filter: url(#art-clay); }
+[data-art="clay"] .av .x-shade { display: inline; opacity: .6; }
+[data-art="sketch"] .av .art-root { filter: url(#art-sketch-a); animation: boil .45s steps(1) infinite; }
+@keyframes boil {
+  0% { filter: url(#art-sketch-a); }
+  33% { filter: url(#art-sketch-b); }
+  66% { filter: url(#art-sketch-c); }
+}

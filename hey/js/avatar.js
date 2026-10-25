@@ -129,6 +129,21 @@
     return { legs, torso: `<g class="torso">${torso}</g>`, arms: arm('l') + arm('r') };
   }
 
+  let uid = 0;
+
+  // Anime and storybook eyes: same spots as the cartoon eyes, so blinking and
+  // looking left/right still move them. `outer` is the side the lash flicks to.
+  const animeEye = (x, outer, iris, ink) => `<ellipse cx="${x}" cy="63" rx="6" ry="7.6" fill="#fff"/>
+    <ellipse cx="${x}" cy="64" rx="5" ry="6.8" fill="url(#${iris})"/>
+    <ellipse cx="${x}" cy="65" rx="2.3" ry="3.1" fill="${ink}"/>
+    <circle cx="${x + 2}" cy="60.6" r="2.2" fill="#fff"/><circle cx="${x - 2}" cy="67.2" r="1.1" fill="#fff"/>
+    <path d="M${x - 7},58.5 Q${x},52.5 ${x + 7},58.5" stroke="${ink}" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M${outer < x ? x - 6.5 : x + 6.5},58.2 L${outer},55.6" stroke="${ink}" stroke-width="1.8" stroke-linecap="round"/>`;
+  const realEye = (x, irisColor, ink) => `<path d="M${x - 6},62 Q${x},56.6 ${x + 6},62 Q${x},65.6 ${x - 6},62Z" fill="#fbf7f2"/>
+    <circle cx="${x}" cy="61.6" r="2.7" fill="${irisColor}"/><circle cx="${x}" cy="61.6" r="1.25" fill="${ink}"/>
+    <circle cx="${x + 0.9}" cy="60.7" r=".7" fill="#fff"/>
+    <path d="M${x - 6.4},62 Q${x},56 ${x + 6.4},62" stroke="${ink}" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
+
   function svg(cfg) {
     const c = Object.assign({ skin: '#e0ac69', hair: '#2b1d16', hairStyle: 'short', outfit: 'tee',
       outfitColor: '#ff7aa8', pants: '#34405e', glasses: false, beard: false }, cfg || {});
@@ -136,10 +151,20 @@
     const o = outfitSvg(c.outfit, c.outfitColor, c.skin, c.pants);
     const skinDark = shade(c.skin, -0.12);
     const ink = '#2b2233';
+    const id = 'av' + ++uid;
+    // Very dark hair → warm brown eyes; otherwise eyes pick up the hair colour.
+    const irisColor = parseInt(shade(c.hair, 0).slice(1), 16) < 0x303030 ? '#6b4330' : shade(c.hair, -0.25);
     return `<svg viewBox="0 0 120 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <ellipse class="shadow" cx="60" cy="203" rx="30" ry="5" fill="rgba(0,0,0,.25)"/>
   <g class="flames"><path d="M43,200 Q51,232 59,200Z" fill="#ffb703"/><path d="M61,200 Q69,232 77,200Z" fill="#ffb703"/>
     <path d="M47,200 Q51,218 55,200Z" fill="#fb5607"/><path d="M65,200 Q69,218 73,200Z" fill="#fb5607"/></g>
+  <defs>
+    <linearGradient id="${id}-iris" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${shade(irisColor, -0.45)}"/><stop offset="1" stop-color="${shade(irisColor, 0.35)}"/></linearGradient>
+    <radialGradient id="${id}-shade" cx=".5" cy=".42" r=".62">
+      <stop offset=".6" stop-color="${shade(c.skin, -0.2)}" stop-opacity="0"/><stop offset="1" stop-color="${shade(c.skin, -0.3)}" stop-opacity=".55"/></radialGradient>
+  </defs>
+  <g class="art-root">
   <g class="headpart hair-back" fill="${c.hair}">${hs.back}</g>
   ${o.legs}
   <g class="bodypart">
@@ -150,15 +175,18 @@
   <g class="headpart head">
     <circle cx="27" cy="62" r="6" fill="${c.skin}"/><circle cx="93" cy="62" r="6" fill="${c.skin}"/>
     <ellipse cx="60" cy="58" rx="34" ry="32" fill="${c.skin}"/>
+    <ellipse class="x-shade" cx="60" cy="58" rx="34" ry="32" fill="url(#${id}-shade)"/>
     <g class="face">
+      <path class="x-nose" d="M60,64 Q57.4,71 59,72.6 Q61,73.6 63,72" stroke="${shade(c.skin, -0.32)}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
       <g class="blush" fill="#ff7f9c"><ellipse cx="40" cy="72" rx="6" ry="3.4"/><ellipse cx="80" cy="72" rx="6" ry="3.4"/></g>
       <path class="blush-lines" d="M37,70 L35,74 M41,70 L39,74 M45,70 L43,74 M77,70 L75,74 M81,70 L79,74 M85,70 L83,74"
         stroke="#ff5c86" stroke-width="1.4" stroke-linecap="round"/>
       <g class="brows" stroke="${shade(c.hair, -0.1)}" stroke-width="2.4" stroke-linecap="round" fill="none">
         <path d="M41,51 Q47,48 52,51"/><path d="M68,51 Q73,48 79,51"/></g>
       <g class="eyes">
-        <g class="e e-normal"><ellipse cx="47" cy="62" rx="4.3" ry="5.6" fill="${ink}"/><ellipse cx="73" cy="62" rx="4.3" ry="5.6" fill="${ink}"/>
-          <circle cx="48.6" cy="59.8" r="1.6" fill="#fff"/><circle cx="74.6" cy="59.8" r="1.6" fill="#fff"/></g>
+        <g class="e e-normal"><g class="k-anime">${animeEye(47, 40, id + '-iris', ink)}${animeEye(73, 80, id + '-iris', ink)}</g>
+          <g class="k-real">${realEye(47, irisColor, ink)}${realEye(73, irisColor, ink)}</g><g class="k-base"><ellipse cx="47" cy="62" rx="4.3" ry="5.6" fill="${ink}"/><ellipse cx="73" cy="62" rx="4.3" ry="5.6" fill="${ink}"/>
+          <circle cx="48.6" cy="59.8" r="1.6" fill="#fff"/><circle cx="74.6" cy="59.8" r="1.6" fill="#fff"/></g></g>
         <g class="e e-wide"><circle cx="47" cy="62" r="6" fill="#fff" stroke="${ink}" stroke-width="1.5"/><circle cx="73" cy="62" r="6" fill="#fff" stroke="${ink}" stroke-width="1.5"/>
           <circle cx="47" cy="62" r="3" fill="${ink}"/><circle cx="73" cy="62" r="3" fill="${ink}"/></g>
         <g class="e e-happy" stroke="${ink}" stroke-width="2.6" stroke-linecap="round" fill="none">
@@ -194,7 +222,9 @@
       </g>
     </g>
     <g class="hair-front" fill="${c.hair}">${hs.front}</g>
+    <path class="x-shine" d="M36,34 Q60,22 84,34 Q60,28 36,34Z" fill="#fff" opacity=".42"/>
     <ellipse class="backhead" cx="60" cy="57" rx="35.5" ry="33.5" fill="${c.hair}"/>
+  </g>
   </g>
 </svg>`;
   }

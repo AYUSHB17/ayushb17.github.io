@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>meetcute avatar styles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="css/style.css?v=1c71b74">
+  <link rel="stylesheet" href="css/themes.css?v=1c71b74">
+  <link rel="stylesheet" href="css/art.css?v=1c71b74">
+  <script src="js/config.js?v=1c71b74"></script>
+  <script src="js/theme.js?v=1c71b74"></script>
+  <script src="js/art.js?v=1c71b74"></script>
+  <style>
+    body { display: block; min-height: 100vh; padding: 24px 16px 48px; overflow-y: auto; }
+    header { max-width: 1240px; margin: 0 auto 18px; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+    h1 { margin: 0; font-size: 28px; color: var(--title); }
+    header p { margin: 4px 0 0; color: var(--muted); }
+    .now { font-size: 15px; color: var(--muted); }
+    .now b { color: var(--text); }
+    .grid { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; }
+    .style-card { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .mini { position: relative; width: 100%; max-width: 340px; height: 270px; border-radius: 24px; overflow: hidden;
+      background: rgba(var(--tint), .05); border: 1px solid var(--line); --av-w: 104px; }
+    .mini .av { bottom: 18px; }
+    .mini .ground { height: 22px; }
+    .name { font-weight: 700; font-size: 18px; }
+    .name code { font-family: ui-monospace, monospace; font-size: 13px; color: var(--pink); background: rgba(255, 122, 168, .12); padding: 2px 7px; border-radius: 6px; margin-left: 4px; }
+    .desc { color: var(--muted); font-size: 14px; text-align: center; max-width: 300px; margin: -2px 0 0; }
+    .open { color: var(--muted); font-size: 13px; }
+    .open a { color: var(--text); }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>pick an avatar style 🎨</h1>
+      <p>Same two avatars, same moods, drawn seven ways. Tell me the name in pink.</p>
+    </div>
+    <div class="now">acting out: <b id="now">…</b></div>
+  </header>
+  <main class="grid" id="grid"></main>
+
+  <script src="js/avatar.js?v=1c71b74"></script>
+  <script src="js/voice.js?v=1c71b74"></script>
+  <script>
+    const STYLES = [
+      ['chibi', 'Chibi', 'The current one: flat, round, simple cartoon.'],
+      ['anime', 'Anime', 'Big glossy eyes with lashes, shine on the hair, hatched blush.'],
+      ['pixel', 'Pixel (16-bit)', 'Chunky pixels, fewer colours, dark outline. Stardew / Terraria era.'],
+      ['game', '2010s mobile game', 'Thick ink outline, punchy colours, hard drop shadow. Sticker-like.'],
+      ['clay', 'Clay toy', 'Puffy and glossy, lit like a little plastic or clay figure.'],
+      ['sketch', 'Hand-drawn', 'Pencil lines that wobble like a doodle being redrawn every frame.'],
+      ['storybook', 'Storybook (semi-real)', 'Almond eyes with irises, a nose, soft face shading. The most grown-up one.'],
+    ];
+    const ME = window.MEETCUTE.me.avatar;
+    const HER = { skin: '#eab78f', hair: '#2b1a12', hairStyle: 'wavy', outfit: 'tee', outfitColor: '#b5a1ff', pants: '#4a6fa5' };
+    const pairs = [];
+    const grid = document.getElementById('grid');
+    for (const [key, name, desc] of STYLES) {
+      const card = document.createElement('section');
+      card.className = 'style-card';
+      card.innerHTML = `<div class="mini" data-art="${key}"><div class="ground"></div></div>
+        <div class="name">${name}<code>${key}</code></div><p class="desc">${desc}</p>
+        <div class="open"><a href="./?demo=chat&art=${key}" target="_blank" rel="noopener">see it on the real page ↗</a></div>`;
+      const box = card.firstChild;
+      const her = new Meet.Avatar(HER, { look: 'right' });
+      const me = new Meet.Avatar(ME, { look: 'left' });
+      her.el.style.left = '30%';
+      me.el.style.left = '70%';
+      box.append(her.el, me.el);
+      pairs.push([her, me]);
+      grid.appendChild(card);
+    }
+    // Everyone acts out the same moment, so the styles compare like for like.
+    const SHOW = [['her', 'laugh'], ['me', 'blush'], ['her', 'love'], ['me', 'flowers'], ['her', 'surprised'],
+      ['me', 'chill'], ['her', 'cry'], ['me', 'puppy'], ['her', 'rocket'], ['me', 'jump'], ['her', 'idle']];
+    let i = 0;
+    function next() {
+      const [who, mood] = SHOW[i++ % SHOW.length];
+      document.getElementById('now').textContent = `${who === 'me' ? 'him' : 'her'} · ${mood}`;
+      for (const [her, me] of pairs) {
+        (who === 'me' ? me : her).mood(mood, { ms: 2600, fx: true });
+        (who === 'me' ? her : me).mood(Meet.REACT[mood] || 'happy', { ms: 2600, fx: false });
+      }
+      setTimeout(next, mood === 'rocket' || mood === 'flowers' ? 3400 : 2700);
+    }
+    Meet.voice?.configure?.({ key: 'mc-muted-gallery', defaultMuted: true });
+    setTimeout(next, 800);
+  </script>
+</body>
+</html>
