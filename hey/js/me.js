@@ -97,7 +97,9 @@
     // one person talking to themself.
     else if (ev.type === 'choice' || (ev.type === 'msg' && ev.from === 'her')) {
       stage.typing('her', false);
-      stage.closer();
+      // She tapped yes: you see the same hand-hold twirl she does.
+      if (ev.type === 'choice' && ev.text === C.script.ask?.bigAsk?.yes?.text) stage.twirl();
+      else stage.closer();
       stage.say('her', ev.text, ev.mood || undefined);
       addLine('her', ev.text, ev.type === 'choice');
     } else if (ev.type === 'msg') {

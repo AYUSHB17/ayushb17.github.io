@@ -254,6 +254,9 @@
     nod:       { eyes: 'normal', mouth: 'smile', anim: 'nod' },
     dance:     { eyes: 'happy',  mouth: 'grin',  anim: 'dance',  fx: ['🎵', '🎶'] },
     walk:      { eyes: 'normal', mouth: 'smile', anim: 'walk' },
+    // the yes twirl (Stage.twirl): hand raised toward the other, then she spins under it
+    handup:    { eyes: 'happy',  mouth: 'grin',  anim: 'handup' },
+    twirl:     { eyes: 'happy',  mouth: 'grin',  anim: 'twirl',  fx: ['✨', '💫', '✨'], min: 1700 },
   };
 
   class Avatar {

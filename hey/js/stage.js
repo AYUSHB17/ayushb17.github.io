@@ -5,6 +5,7 @@
   'use strict';
   const { Avatar, detectMood, REACT } = window.Meet;
   const voice = () => window.Meet.voice;
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // Start apart, end side by side; setDistance() moves between the two.
   const HER_X = '22%';
@@ -118,10 +119,52 @@
       }
     }
 
+    // She said yes: they step in close, he raises his hand, she takes it and
+    // twirls under it, a heart pops where their hands meet, then they both
+    // blush. While it plays, nothing else (speech reactions, fidgeting) may
+    // change their moods, or the pose breaks halfway.
+    async twirl() {
+      const { her, me } = this;
+      if (!her || !me || this.busy) return;
+      this.busy = true;
+      try {
+        // Close enough that his raised hand reaches hers (arm-length apart).
+        const gap = 'var(--av-w) * .28';
+        await Promise.all([her.walkTo(`calc(50% - ${gap})`, 650), me.walkTo(`calc(50% + ${gap})`, 650)]);
+        this.distance = 1;
+        me.mood('handup', { ms: 0, fx: false });
+        await wait(380);
+        her.mood('handup', { ms: 0, fx: false });
+        await wait(320);
+        this.heart();
+        voice()?.sfx('sparkle');
+        her.mood('twirl', { ms: 0 });
+        await wait(1700);
+        her.mood('handup', { ms: 0, fx: false });
+        await wait(300);
+        her.mood('blush', { ms: 3200 });
+        me.mood('blush', { ms: 3200 });
+        this.heart('💞');
+        await wait(1500);
+      } finally {
+        this.busy = false;
+        this.lastTalk = Date.now();
+      }
+    }
+
+    // A heart that pops up between them and floats away.
+    heart(symbol = '💗') {
+      const h = document.createElement('span');
+      h.className = 'stage-heart';
+      h.textContent = symbol;
+      this.root.appendChild(h);
+      setTimeout(() => h.remove(), 2300);
+    }
+
     // Tapping an avatar makes it react, so there's something to play with.
     poke(who, friend) {
       const a = friend || this[who];
-      if (!a || a.el.dataset.mood !== 'idle') return;
+      if (!a || this.busy || a.el.dataset.mood !== 'idle') return;
       const [mood, sound] = POKES[who][Math.floor(Math.random() * POKES[who].length)];
       a.mood(mood, { ms: 1400, energy: 0.9 });
       voice()?.speak(sound, VOICES[who]);
@@ -147,7 +190,7 @@
       void b.offsetWidth;
       b.classList.add('show');
       const readMs = Math.min(5200, 1100 + text.length * 45);
-      a.mood(mood, { energy, ms: readMs });
+      if (!this.busy) a.mood(mood, { energy, ms: readMs });
       a.talking(true);
       voice()?.speak(text, VOICES[who]);
       setTimeout(() => a.talking(false), Math.min(readMs - 300, 600 + text.length * 35));
@@ -155,7 +198,7 @@
       if (who === 'friends') this.friends.slice(1).forEach((f) => f.mood('giggle', { ms: 1200, fx: false }));
       const o = this.other(who);
       const react = d.positive ? 'jump' : REACT[mood] || 'nod';
-      if (o) setTimeout(() => o.mood(react, { energy: Math.max(0.8, energy * 0.8), ms: 1800, fx: react !== 'nod' }), 500);
+      if (o && !this.busy) setTimeout(() => !this.busy && o.mood(react, { energy: Math.max(0.8, energy * 0.8), ms: 1800, fx: react !== 'nod' }), 500);
       if (react === 'jump') setTimeout(() => voice()?.sfx('boing'), 600);
       clearTimeout(b._hide);
       b._hide = setTimeout(() => b.classList.remove('show'), readMs + 4000);
@@ -168,7 +211,7 @@
         if (b.classList.contains('show') && !b.classList.contains('typing')) return;
         b.innerHTML = '<i></i><i></i><i></i>';
         b.classList.add('show', 'typing');
-        this.speaker(who)?.mood('think', { ms: 0, fx: false });
+        if (!this.busy) this.speaker(who)?.mood('think', { ms: 0, fx: false });
       } else if (b.classList.contains('typing')) {
         b.classList.remove('show', 'typing');
         this.speaker(who)?.mood('idle');
@@ -179,7 +222,7 @@
     // standing in front of each other. Tiny-him plays it cool: leans,
     // whistles, glances over, looks away.
     idleLife() {
-      if (Date.now() - this.lastTalk < 5000) return;
+      if (this.busy || Date.now() - this.lastTalk < 5000) return;
       const pick = Math.random() < 0.55 ? this.me : this.her;
       if (!pick || pick.el.dataset.mood !== 'idle') return;
       const r = Math.random();

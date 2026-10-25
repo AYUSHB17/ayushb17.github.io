@@ -80,8 +80,12 @@ window.MEETCUTE = {
       // jumps away `dodges.length` times when caught, then stops and works. Typing "no" or "I'm seeing someone" always ends kindly.
       bigAsk: {
         text: 'would you go on a little coffee date with me? ☕',
-        yes: { text: 'yes 💖', next: 'yes' },
-        no: { text: 'maybe/no', next: 'maybe', dodges: ['maybe? 🤨', 'nope, too slow 🙈', 'you sure? 🥺'], giveUp: 'fine… maybe/no 😔' },
+        // `louder`: what yes turns into with each attempt at not choosing it (it grows every time too).
+        yes: { text: 'yes 💖', next: 'yes',
+          // Short words only: at full size a long word is wider than the phone.
+          louder: ['YES 💖', 'YESSS 💖💖', 'YES!!! 💖💖💖', 'pls 🥺 yes 💖', 'yes yes yes 💖', 'still yes 😌'] },
+        no: { text: 'maybe/no', next: 'maybe', dodges: ['maybe? 🤨', 'nope, too slow 🙈', 'you sure? 🥺', 'yes is getting bigger 👀'],
+          giveUp: 'fine… maybe/no 😔' },
         fineprint: 'not your thing? just type no — tiny me will survive 🥲',
       },
     },

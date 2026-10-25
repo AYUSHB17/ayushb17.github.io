@@ -341,6 +341,12 @@
     if (!node) return;
     state.node = id;
     options([]);
+    // A celebration (the yes twirl) plays out before tiny-him says anything.
+    if (state.celebration) {
+      await state.celebration;
+      state.celebration = null;
+      if (token !== state.run) return;
+    }
     const lines = [...(node.say || [])];
     // Your prepped line about her goes right after the hello.
     if (id === 'start' && state.prep?.detail) lines.push([state.prep.detail, 'blush']);
@@ -382,7 +388,10 @@
 
   // The date question floats in the middle of the screen while tiny-him
   // holds out flowers. "yes" is enormous; "no" is tiny and wanders around
-  // the screen. Catch it three times and it gives up, stops, and works.
+  // the screen. Catch it a few times and it gives up, stops, and works.
+  // Every attempt at not choosing yes (catching the no, tapping beside the
+  // buttons) makes yes absurdly bigger and louder. The no always stays on top
+  // of it, so it can never be covered.
   function bigAsk(q) {
     const nq = q.no || q.maybe;
     const wrap = document.createElement('div');
@@ -403,27 +412,53 @@
     stage.me.mood('flowers', { ms: 0 });
     const close = () => { wrap.remove(); no.remove(); state.closeAsk = null; };
     state.closeAsk = close;
+
+    const louder = q.yes.louder || [];
+    let attempts = 0;
+    let lastGrow = 0;
+    const grow = () => {
+      if (performance.now() - lastGrow < 300) return;   // one tap = one attempt
+      lastGrow = performance.now();
+      attempts++;
+      // Grows by font size, not scale: a scaled pill ran off both screen edges
+      // and the word YES got cut off. This way it wraps and stays readable.
+      yes.style.setProperty('--grow', Math.min(5, attempts));
+      yes.textContent = louder[Math.min(attempts, louder.length) - 1] || q.yes.text;
+      yes.classList.remove('boing');
+      void yes.offsetWidth;
+      yes.classList.add('boing');
+      Meet.voice.sfx('boing');
+    };
     dodgy(no, {
       labels: nq.dodges,
       giveUp: nq.giveUp,
       wander: true,
       onDodge: (n) => {
-        yes.style.transform = `scale(${1 + n * 0.14})`;
+        grow();
         stage.me.mood(n === 2 ? 'cry' : 'puppy', { ms: 1600 });
         setTimeout(() => { if (wrap.isConnected) stage.me.mood('flowers', { ms: 0 }); }, 1700);
       },
       // Once it gives up it stops, grows to a normal size and can be tapped.
       onGiveUp: () => no.classList.add('gave-up'),
     });
+    // Tapping anywhere except yes is also not choosing yes.
+    wrap.addEventListener('pointerdown', (e) => { if (!yes.contains(e.target) && e.target !== no) grow(); });
+    // Pressing down on yes: tiny-him gasps before she even lets go.
+    yes.addEventListener('pointerdown', () => stage.me.mood('surprised', { ms: 900, fx: false }));
     // Same ghost-tap guard as the answer chips: the card can appear right under her finger.
     const shownAt = performance.now();
     yes.onclick = () => {
       if (performance.now() - shownAt < 600) return;
       close();
-      confetti();
+      confetti(70);
       stage.me.hold('');
-      stage.her.hold('flowers');
-      stage.setDistance(1);
+      const glow = document.createElement('div');
+      glow.className = 'love-glow';
+      document.body.appendChild(glow);
+      setTimeout(() => glow.classList.add('out'), 6000);
+      setTimeout(() => glow.remove(), 7400);
+      // He takes her hand and she twirls; the script's next line waits for it (see run()).
+      state.celebration = stage.twirl().then(() => stage.her.hold('flowers'));
       herSays(q.yes.text, 'choice', q.yes.next);
     };
     no.onclick = () => {
@@ -484,7 +519,7 @@
     // Every reply brings them a step closer; a no sends tiny-him back to a polite distance.
     // A hesitant "maybe/no" leaves the distance as it is.
     if (rejecting) await stage.setDistance(0);
-    else if (go !== 'maybe') await stage.closer();
+    else if (go !== 'maybe' && !stage.busy) await stage.closer();   // not mid-twirl
     await stage.say('her', text, mood, energy);
     log('her', text);
     if (state.live) { if (REJECT.test(text)) state.closeAsk?.(); return; }
