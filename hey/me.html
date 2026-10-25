@@ -9,11 +9,11 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎛️</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="css/style.css?v=09b2fc6">
-  <link rel="stylesheet" href="css/themes.css?v=09b2fc6">
-  <script src="js/config.js?v=09b2fc6"></script>
-  <script src="js/theme.js?v=09b2fc6"></script>
-  <link rel="stylesheet" href="css/me.css?v=09b2fc6">
+  <link rel="stylesheet" href="css/style.css?v=e047842">
+  <link rel="stylesheet" href="css/themes.css?v=e047842">
+  <script src="js/config.js?v=e047842"></script>
+  <script src="js/theme.js?v=e047842"></script>
+  <link rel="stylesheet" href="css/me.css?v=e047842">
 </head>
 <body class="me-page">
   <div class="sky" aria-hidden="true"></div>
@@ -33,10 +33,35 @@
   <section id="list" class="screen" hidden>
     <header class="topbar">
       <span><b>meetcute</b> <span class="dot" id="conn"></span></span>
-      <button class="btn small primary" id="showQr">show QR</button>
+      <span class="top-actions"><button class="btn small" id="prepBtn">✨ prep</button>
+      <button class="btn small primary" id="showQr">show QR</button></span>
     </header>
     <div class="cards" id="cards"></div>
     <p class="empty" id="empty">nobody yet. show her the QR 😄</p>
+  </section>
+
+  <!-- prep: set her look, her friends and the place before she scans -->
+  <section id="prep" class="screen" hidden>
+    <header class="topbar">
+      <button class="btn small ghost" id="pBack">←</button>
+      <b>prep before she scans</b>
+      <span></span>
+    </header>
+    <div class="stage-slot"><div class="stage" id="prepStage"><div class="ground"></div></div></div>
+    <div class="prep-body">
+      <div class="row"><span>where are you?</span><div class="chips" id="pPlace"></div></div>
+      <div class="row"><span>friends with her</span><div class="chips" id="pCount"></div></div>
+      <div class="row"><span>editing</span><div class="chips" id="pWho"></div></div>
+      <div class="row"><span>hair</span><div class="chips" id="pHair"></div></div>
+      <div class="row"><span>outfit</span><div class="chips" id="pOutfit"></div></div>
+      <div class="row"><span>skin</span><div class="swatches" id="pSkin"></div></div>
+      <div class="row"><span>hair colour</span><div class="swatches" id="pHairC"></div></div>
+      <div class="row"><span>outfit colour</span><div class="swatches" id="pOutC"></div></div>
+      <label class="toggle"><input type="checkbox" id="pGlasses"> glasses 👓</label>
+      <div class="row"><span>one line about her — tiny you says it early on</span>
+        <input class="field" id="pDetail" maxlength="120" placeholder="e.g. love the red scarf btw 🧣"></div>
+      <button class="btn primary wide" id="pGo">save &amp; show QR ✨</button>
+    </div>
   </section>
 
   <!-- one conversation, same little scene she sees -->
@@ -50,6 +75,17 @@
     <div class="log" id="cLog"></div>
     <div class="stage-slot"><div class="stage" id="stage"><div class="ground"></div></div></div>
     <div class="status" id="cStatus"></div>
+    <!-- whisper with her friends: never in the log, erased on close -->
+    <div class="wbox" id="wbox" hidden>
+      <div class="wbox-head"><span>🤫 whisper — her friends</span><button class="btn small" id="wClose">close &amp; erase</button></div>
+      <div class="wlog" id="wlog"></div>
+      <div class="chips wquick" id="wquick"></div>
+      <form class="composer" id="wform" autocomplete="off">
+        <input id="wmsg" class="field" placeholder="whisper to her friends…" maxlength="300">
+        <button class="btn send" aria-label="send">➤</button>
+      </form>
+    </div>
+    <div class="whisper-bar" id="wbar"><button class="btn small" id="wStart">🤫 ask her friends</button></div>
     <div class="chips emotes" id="emotes"></div>
     <div class="chips quick" id="quick"></div>
     <form class="composer" id="composer" autocomplete="off">
@@ -63,19 +99,21 @@
       <p class="qr-top">psst… scan me 👀</p>
       <div id="qrCode"></div>
       <p class="qr-bottom">I made you something ✨</p>
+      <p class="qr-prep" id="qrPrep"></p>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/avatar.js?v=09b2fc6"></script>
-  <script src="js/voice.js?v=09b2fc6"></script>
-  <script src="js/firebase-config.js?v=09b2fc6"></script>
+  <script src="js/avatar.js?v=e047842"></script>
+  <script src="js/voice.js?v=e047842"></script>
+  <script src="js/firebase-config.js?v=e047842"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-  <script src="js/net-firebase.js?v=09b2fc6"></script>
-  <script src="js/net.js?v=09b2fc6"></script>
-  <script src="js/stage.js?v=09b2fc6"></script>
-  <script src="js/me.js?v=09b2fc6"></script>
+  <script src="js/net-firebase.js?v=e047842"></script>
+  <script src="js/net.js?v=e047842"></script>
+  <script src="js/stage.js?v=e047842"></script>
+  <script src="js/prep.js?v=e047842"></script>
+  <script src="js/me.js?v=e047842"></script>
 </body>
 </html>

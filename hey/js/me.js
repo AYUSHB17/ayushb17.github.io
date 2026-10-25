@@ -70,6 +70,11 @@
         stage.typing('her', m.typing);
         status();
       }
+    } else if (m.type === 'whisper') {
+      const s = sessions.get(m.sid);
+      if (s) { s.whisper = m.open; s.whispers = m.list || []; }
+      if (m.sid === open) renderWhisper();
+      if (m.open && m.list?.length && m.list[m.list.length - 1].from === 'friends') buzz();
     } else if (m.type === 'deleted') {
       sessions.delete(m.sid);
       if (open === m.sid) showList();
@@ -107,6 +112,8 @@
 
   function showList() {
     open = null;
+    document.body.classList.remove('whispering');
+    Meet.setTheme(Meet.defaultTheme);
     $('convo').hidden = true;
     $('list').hidden = false;
     renderList();
@@ -149,6 +156,11 @@
     stage.place('me', C.me.avatar);
     if (s.her) stage.place('her', s.her.avatar);
     else if (stage.her) { stage.her.el.remove(); stage.her = null; }
+    // Her setting and friends, as you prepped them (or as her page reported them).
+    Meet.setTheme(Meet.PLACE_THEME[s.scene?.place] || Meet.defaultTheme);
+    stage.placeFriends(s.scene?.friends || []);
+    stage.whispering = false;
+    seenW = 0;
     $('cLog').innerHTML = '';
     for (const m of s.messages) addLine(m.from, m.text, m.choice);
     // Same closeness she sees: one step per reply of hers.
@@ -156,6 +168,55 @@
     stage.setDistance(s.contact ? 1 : Math.min(0.85, replies * 0.2), { walk: false });
     renderHeader();
     status();
+    renderWhisper();
+  }
+
+  // ------------------------------------------------------------ whisper
+
+  let seenW = 0;
+  async function renderWhisper() {
+    const s = sessions.get(open);
+    if (!s) return;
+    const on = !!s.whisper;
+    $('wbox').hidden = !on;
+    $('wbar').hidden = on || !s.her;
+    document.body.classList.toggle('whispering', on);
+    if (on !== stage.whispering) {
+      if (on && !stage.friends.length) stage.placeFriends(Meet.DEFAULT_FRIENDS);
+      if (!on) { $('wlog').innerHTML = ''; seenW = 0; }
+      await stage.whisper(on);
+      if (!on && !(s.scene?.friends || []).length) stage.placeFriends([]);
+    }
+    if (!on) return;
+    const list = s.whispers || [];
+    $('wlog').innerHTML = '';
+    for (const w of list) {
+      const p = document.createElement('p');
+      p.className = w.from === 'me' ? 'me' : 'friends';
+      p.textContent = w.text;
+      $('wlog').appendChild(p);
+    }
+    $('wlog').scrollTop = $('wlog').scrollHeight;
+    // Act out only what's new since last time.
+    for (const w of list.slice(seenW)) stage.say(w.from === 'me' ? 'me' : 'friends', w.text);
+    seenW = list.length;
+  }
+
+  $('wStart').onclick = () => open && net.me.whisper(open, true);
+  $('wClose').onclick = () => open && net.me.whisper(open, false);
+  $('wform').onsubmit = (e) => {
+    e.preventDefault();
+    const text = $('wmsg').value.trim();
+    if (!text || !open) return;
+    $('wmsg').value = '';
+    net.me.wmsg(open, text).catch(() => { $('wmsg').value = text; });
+  };
+  for (const line of C.whisperLines || []) {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.textContent = line;
+    b.onclick = () => open && net.me.wmsg(open, line);
+    $('wquick').appendChild(b);
   }
 
   function renderHeader() {
@@ -235,15 +296,23 @@
 
   // ------------------------------------------------------------ QR
 
-  // Points at her page on whatever host this dashboard is served from.
-  $('showQr').onclick = () => {
-    const url = new URL('./', location.href).href;
+  // Points at her page on whatever host this dashboard is served from; a
+  // prep id rides along when you prepped.
+  function showQr(pid, label) {
+    const url = new URL('./', location.href);
+    if (pid) url.searchParams.set('p', pid);
+    $('qrPrep').textContent = label ? `prepped: ${label}` : '';
     $('qrCode').innerHTML = '';
-    new QRCode($('qrCode'), { text: url, width: 600, height: 600, colorDark: '#2b1640', colorLight: '#ffffff',
+    new QRCode($('qrCode'), { text: url.href, width: 600, height: 600, colorDark: '#2b1640', colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.M });
     $('qr').hidden = false;
     // Max brightness isn't scriptable; keeping the screen awake is.
     navigator.wakeLock?.request('screen').catch(() => {});
-  };
+  }
+  $('showQr').onclick = () => showQr();
+  $('prepBtn').onclick = () => Meet.prep.open((done) => {
+    showList();
+    if (done) showQr(done.pid, done.label);
+  });
   $('qr').onclick = () => { $('qr').hidden = true; };
 })();

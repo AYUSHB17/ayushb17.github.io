@@ -190,6 +190,7 @@
       </g>
     </g>
     <g class="hair-front" fill="${c.hair}">${hs.front}</g>
+    <ellipse class="backhead" cx="60" cy="57" rx="35.5" ry="33.5" fill="${c.hair}"/>
   </g>
 </svg>`;
   }
@@ -310,5 +311,12 @@
   const REACT = { laugh: 'giggle', love: 'blush', shy: 'blush', surprised: 'surprised', sad: 'puppy', cry: 'puppy',
     think: 'think', neutral: 'chill', excited: 'jump', rocket: 'jump', happy: 'happy' };
 
-  window.Meet = Object.assign(window.Meet || {}, { Avatar, detectMood, REACT, HAIR, OUTFITS, shade, svg });
+  // Swatches shared by her avatar maker and your prep screen.
+  const PALETTE = {
+    skins: ['#ffe3cc', '#f6cfae', '#eab78f', '#d9a074', '#c68a5e', '#a86b45', '#8a5434', '#5e3a22'],
+    hairs: ['#16100f', '#3b2417', '#6b4226', '#a0672e', '#dcb46f', '#b5452f', '#e58cb6', '#7381e0'],
+    clothes: ['#ff7aa8', '#ffd166', '#7bdff2', '#b5a1ff', '#7ed6a5', '#f4f1ea', '#2a2a35', '#e4572e'],
+  };
+
+  window.Meet = Object.assign(window.Meet || {}, { Avatar, detectMood, REACT, HAIR, OUTFITS, PALETTE, shade, svg });
 })();

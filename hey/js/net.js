@@ -22,6 +22,8 @@
 
   const her = {
     start: () => post('/api/start').then((r) => r.sid),
+    // The setup you made before she scanned (her look, friends, place), if the QR carried one.
+    prep: (pid) => fetch('/api/prep?id=' + encodeURIComponent(pid)).then((r) => (r.ok ? r.json() : null)),
     listen: (sid, onEvent, onState) => stream('/api/stream?sid=' + encodeURIComponent(sid), onEvent, onState),
     send: (sid, type, payload) => post('/api/her', Object.assign({ sid, type }, payload)),
   };
@@ -36,6 +38,9 @@
     typing: (sid, typing) => post('/api/admin/typing', { sid, typing }),
     live: (sid, live) => post('/api/admin/live', { sid, live }),
     remove: (sid) => post('/api/admin/delete', { sid }),
+    prep: (prep) => post('/api/admin/prep', { prep }).then((r) => r.pid),
+    whisper: (sid, open) => post('/api/admin/whisper', { sid, open }),
+    wmsg: (sid, text) => post('/api/admin/wmsg', { sid, text }),
   };
 
   window.Meet = Object.assign(window.Meet || {}, { net: window.Meet?.netFirebase || { her, me } });

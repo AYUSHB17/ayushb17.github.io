@@ -11,12 +11,25 @@
     scrapbook: 'Caveat:wght@600;700&family=Patrick+Hand',
     glass: 'Plus+Jakarta+Sans:wght@400;600;700;800',
   };
+  // Where you met her (set in prep) → which theme fits.
+  const PLACE_THEME = { cafe: 'cafe', park: 'park', street: 'midnight', mall: 'glass', college: 'scrapbook', arcade: 'pixel' };
+  const loaded = new Set();
+
+  function setTheme(name) {
+    const theme = FONTS[name] ? name : 'midnight';
+    document.documentElement.dataset.theme = theme;
+    if (!loaded.has(theme)) {
+      loaded.add(theme);
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${FONTS[theme]}&display=swap`;
+      document.head.appendChild(link);
+    }
+    window.Meet.theme = theme;
+    return theme;
+  }
+
   const asked = new URLSearchParams(location.search).get('theme');
-  const theme = FONTS[asked] ? asked : FONTS[window.MEETCUTE?.theme] ? window.MEETCUTE.theme : 'midnight';
-  document.documentElement.dataset.theme = theme;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = `https://fonts.googleapis.com/css2?family=${FONTS[theme]}&display=swap`;
-  document.head.appendChild(link);
-  window.Meet = Object.assign(window.Meet || {}, { THEMES: Object.keys(FONTS), theme });
+  window.Meet = Object.assign(window.Meet || {}, { THEMES: Object.keys(FONTS), PLACE_THEME, setTheme });
+  window.Meet.defaultTheme = setTheme(FONTS[asked] ? asked : window.MEETCUTE?.theme);
 })();

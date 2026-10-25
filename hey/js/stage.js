@@ -10,18 +10,23 @@
   const HER_X = '22%';
   const ME_X = '78%';
   const NEAR = 18; // % each one moves from start to right next to each other
-  const VOICES = Object.assign({ me: { pitch: 470 }, her: { pitch: 660 } }, window.MEETCUTE?.voices);
+  const VOICES = Object.assign({ me: { pitch: 470 }, her: { pitch: 660 }, friends: { pitch: 760 } }, window.MEETCUTE?.voices);
+  const FRIEND_X = [10, 33, 3, 41];        // a little group around her, a step behind
+  const WHISPER_X = { her: 6, friends: [24, 34, 16, 42] };
   const POKES = {
     me: [['giggle', 'hehe'], ['blush', 'oh! hi'], ['spin', 'wheee'], ['chill', 'mhm']],
     her: [['giggle', 'hehe'], ['spin', 'wheee'], ['blush', 'heyy'], ['surprised', 'oh!']],
   };
+  POKES.friends = POKES.her;
 
   class Stage {
     constructor(root) {
       this.root = root;
       this.bubbles = {};
       this.lastTalk = Date.now();
-      for (const who of ['her', 'me']) {
+      this.friends = [];
+      this.whispering = false;
+      for (const who of ['her', 'me', 'friends']) {
         const b = document.createElement('div');
         b.className = `bubble bubble-${who}`;
         root.appendChild(b);
@@ -58,28 +63,74 @@
       return this.setDistance(Math.max(now, Math.min(max, now + step)));
     }
 
-    other(who) { return who === 'her' ? this.me : this.her; }
-    otherName(who) { return who === 'her' ? 'me' : 'her'; }
+    other(who) { return who === 'me' ? (this.whispering ? this.friends[0] : this.her) : this.me; }
+
+    // Her friends: same avatars, a bit smaller, standing behind her.
+    placeFriends(list = []) {
+      for (const f of this.friends) f.el.remove();
+      this.friends = list.slice(0, 4).map((f, i) => {
+        const a = new Avatar(f.avatar, { className: 'av-friend', look: 'right' });
+        a.el.style.left = FRIEND_X[i] + '%';
+        a.el.addEventListener('click', () => this.poke('friends', a));
+        this.root.insertBefore(a.el, this.root.firstChild);
+        return a;
+      });
+      return this.friends;
+    }
+
+    // Whisper: she turns her back and steps aside, her friends come forward,
+    // tiny-him leans in. Off puts everyone back.
+    async whisper(on) {
+      this.whispering = on;
+      // Faded bubbles still hold their last words; blank them so nothing
+      // whispered survives in the page after it's closed.
+      for (const b of Object.values(this.bubbles)) {
+        b.classList.remove('show', 'typing');
+        clearTimeout(b._hide);
+        b.textContent = '';
+      }
+      const her = this.her;
+      if (on) {
+        her?.mood('shy', { ms: 1400 });
+        her?.el.classList.add('turned');
+        await Promise.all([
+          her?.walkTo(WHISPER_X.her + '%', 800),
+          ...this.friends.map((f, i) => f.walkTo(WHISPER_X.friends[i] + '%', 900)),
+        ]);
+        this.friends.forEach((f) => f.mood('giggle', { ms: 1400 }));
+        this.me?.mood('chill', { ms: 2000 });
+      } else {
+        her?.el.classList.remove('turned');
+        await Promise.all([
+          ...this.friends.map((f, i) => f.walkTo(FRIEND_X[i] + '%', 800)),
+          this.setDistance(this.distance || 0),   // walks her back to where she was
+        ]);
+        her?.mood('happy', { ms: 1200 });
+      }
+    }
 
     // Tapping an avatar makes it react, so there's something to play with.
-    poke(who) {
-      const a = this[who];
+    poke(who, friend) {
+      const a = friend || this[who];
       if (!a || a.el.dataset.mood !== 'idle') return;
       const [mood, sound] = POKES[who][Math.floor(Math.random() * POKES[who].length)];
       a.mood(mood, { ms: 1400, energy: 0.9 });
       voice()?.speak(sound, VOICES[who]);
     }
 
+    // Who's talking: her, me, or one of her friends (whoever's first in line).
+    speaker(who) { return who === 'friends' ? this.friends[0] : this[who]; }
+
     // Speak a line: bubble, squeaky voice, talking mouth and a mood, while
     // the other one reacts. Resolves after roughly the time it takes to read.
     say(who, text, mood, energy) {
-      const a = this[who];
+      const a = this.speaker(who);
       if (!a) return Promise.resolve();
       const d = detectMood(text);
       mood = mood || d.mood;
       energy = energy || d.energy;
       this.lastTalk = Date.now();
-      this.bubbles[this.otherName(who)].classList.remove('show');
+      for (const [k, other] of Object.entries(this.bubbles)) if (k !== who) other.classList.remove('show');
       const b = this.bubbles[who];
       b.classList.remove('typing');
       b.textContent = text;
@@ -92,6 +143,7 @@
       voice()?.speak(text, VOICES[who]);
       setTimeout(() => a.talking(false), Math.min(readMs - 300, 600 + text.length * 35));
       // Listener: anything hopeful ("yes", "sure", "I'd love to") gets a jump.
+      if (who === 'friends') this.friends.slice(1).forEach((f) => f.mood('giggle', { ms: 1200, fx: false }));
       const o = this.other(who);
       const react = d.positive ? 'jump' : REACT[mood] || 'nod';
       if (o) setTimeout(() => o.mood(react, { energy: Math.max(0.8, energy * 0.8), ms: 1800, fx: react !== 'nod' }), 500);
@@ -107,10 +159,10 @@
         if (b.classList.contains('show') && !b.classList.contains('typing')) return;
         b.innerHTML = '<i></i><i></i><i></i>';
         b.classList.add('show', 'typing');
-        this[who]?.mood('think', { ms: 0, fx: false });
+        this.speaker(who)?.mood('think', { ms: 0, fx: false });
       } else if (b.classList.contains('typing')) {
         b.classList.remove('show', 'typing');
-        this[who]?.mood('idle');
+        this.speaker(who)?.mood('idle');
       }
     }
 
@@ -135,4 +187,9 @@
 
   window.Meet.Stage = Stage;
   window.Meet.POS = { HER_X, ME_X };
+  // Used when you open a whisper but didn't prep any friends: two generic ones.
+  window.Meet.DEFAULT_FRIENDS = [
+    { avatar: { skin: '#d9a074', hair: '#16100f', hairStyle: 'bob', outfit: 'tee', outfitColor: '#7bdff2', pants: '#34405e' } },
+    { avatar: { skin: '#f6cfae', hair: '#6b4226', hairStyle: 'bun', outfit: 'jacket', outfitColor: '#b5a1ff', pants: '#2a2a35' } },
+  ];
 })();

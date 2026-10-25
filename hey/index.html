@@ -8,10 +8,10 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💌</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="css/style.css?v=09b2fc6">
-  <link rel="stylesheet" href="css/themes.css?v=09b2fc6">
-  <script src="js/config.js?v=09b2fc6"></script>
-  <script src="js/theme.js?v=09b2fc6"></script>
+  <link rel="stylesheet" href="css/style.css?v=e047842">
+  <link rel="stylesheet" href="css/themes.css?v=e047842">
+  <script src="js/config.js?v=e047842"></script>
+  <script src="js/theme.js?v=e047842"></script>
 </head>
 <body class="her">
   <div class="sky" aria-hidden="true"></div>
@@ -59,6 +59,16 @@
     </header>
     <div class="log" id="log" aria-live="polite"></div>
     <div class="stage-slot" id="stageSlot"></div>
+    <!-- whisper: her friends and real-him, nothing logged, erased on close -->
+    <div class="wbox" id="wbox" hidden>
+      <div class="wbox-head"><span>🤫 friends only — <span id="wName"></span>, no peeking!</span>
+        <button class="btn small" id="wClose" type="button">done ✕</button></div>
+      <div class="wlog" id="wlog"></div>
+      <form class="composer" id="wform" autocomplete="off">
+        <input id="wmsg" class="field" placeholder="friends: type here…" maxlength="300" enterkeyhint="send">
+        <button class="btn send" aria-label="send">➤</button>
+      </form>
+    </div>
     <div class="hint" id="hint">messages you send here go to real <span id="meName2"></span></div>
     <div class="chips options" id="options"></div>
     <form class="composer" id="composer" autocomplete="off">
@@ -67,18 +77,27 @@
     </form>
   </section>
 
+  <div class="handoff" id="handoff" hidden>
+    <div class="handoff-card">
+      <span class="big">📱➡️👯‍♀️</span>
+      <h2>hand your phone to your friends</h2>
+      <p>he wants their honest verdict 👀<br><span id="hoName"></span>, no peeking 🙈</p>
+      <button class="btn primary wide" id="hoGo" type="button">we’re the friends 👋</button>
+    </div>
+  </div>
+
   <!-- the ground both avatars stand on: the bottom edge of her phone -->
   <div class="stage" id="stage"><div class="ground"></div></div>
 
-  <script src="js/avatar.js?v=09b2fc6"></script>
-  <script src="js/voice.js?v=09b2fc6"></script>
-  <script src="js/firebase-config.js?v=09b2fc6"></script>
+  <script src="js/avatar.js?v=e047842"></script>
+  <script src="js/voice.js?v=e047842"></script>
+  <script src="js/firebase-config.js?v=e047842"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-  <script src="js/net-firebase.js?v=09b2fc6"></script>
-  <script src="js/net.js?v=09b2fc6"></script>
-  <script src="js/stage.js?v=09b2fc6"></script>
-  <script src="js/app.js?v=09b2fc6"></script>
+  <script src="js/net-firebase.js?v=e047842"></script>
+  <script src="js/net.js?v=e047842"></script>
+  <script src="js/stage.js?v=e047842"></script>
+  <script src="js/app.js?v=e047842"></script>
 </body>
 </html>

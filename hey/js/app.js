@@ -7,7 +7,7 @@
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-  const state = { sid: null, her: null, live: false, run: 0, node: null, closeStream: null };
+  const state = { sid: null, her: null, prep: null, live: false, run: 0, node: null, closeStream: null, whisper: false };
   const stage = new Stage($('stage'));
   const fill = (t) => t.replace(/\{name\}/g, state.her?.name || 'you');
 
@@ -18,7 +18,7 @@
   // ------------------------------------------------------------ session
 
   function save() {
-    try { sessionStorage.setItem('mc', JSON.stringify({ sid: state.sid, her: state.her })); } catch { /* private mode */ }
+    try { sessionStorage.setItem('mc', JSON.stringify({ sid: state.sid, her: state.her, prep: state.prep })); } catch { /* private mode */ }
   }
   function restore() {
     try { return JSON.parse(sessionStorage.getItem('mc') || 'null'); } catch { return null; }
@@ -31,7 +31,8 @@
   }
 
   function onEvent(ev) {
-    if (ev.type === 'hello') setLive(ev.live);
+    if (ev.type === 'hello') { setLive(ev.live); if (ev.whisper) onWhisper(true, ev.list); }
+    else if (ev.type === 'whisper') onWhisper(ev.open, ev.list);
     else if (ev.type === 'live') setLive(ev.live);
     else if (ev.type === 'typing') stage.typing('me', ev.typing);
     else if (ev.type === 'emote') stage.me?.mood(ev.emote, { energy: 1.2 });
@@ -189,9 +190,7 @@
 
   // ------------------------------------------------------------ 2. maker
 
-  const SKINS = ['#ffe3cc', '#f6cfae', '#eab78f', '#d9a074', '#c68a5e', '#a86b45', '#8a5434', '#5e3a22'];
-  const HAIRS = ['#16100f', '#3b2417', '#6b4226', '#a0672e', '#dcb46f', '#b5452f', '#e58cb6', '#7381e0'];
-  const CLOTHES = ['#ff7aa8', '#ffd166', '#7bdff2', '#b5a1ff', '#7ed6a5', '#f4f1ea', '#2a2a35', '#e4572e'];
+  const { skins: SKINS, hairs: HAIRS, clothes: CLOTHES } = Meet.PALETTE;
   const draft = { skin: '#eab78f', hair: '#3b2417', hairStyle: 'long', outfit: 'dress',
     outfitColor: '#ff7aa8', pants: '#34405e', glasses: false };
   let preview;
@@ -302,7 +301,7 @@
     if (!name) return;
     state.her = { name, avatar: Object.assign({}, draft) };
     save();
-    send('join', { her: state.her });
+    send('join', { her: state.her, scene: state.prep ? { friends: state.prep.friends || [], place: state.prep.place || '' } : null });
     $('maker').hidden = true;
     preview.el.remove();
     await enterScene(true);
@@ -316,6 +315,7 @@
     $('scene').hidden = false;
     document.body.classList.add('in-scene');
     $('stageSlot').appendChild($('stage'));
+    stage.placeFriends(state.prep?.friends || []);
     const me = stage.place('me', C.me.avatar);
     me.el.classList.remove('peek');
     me.el.style.transition = '';
@@ -341,7 +341,10 @@
     if (!node) return;
     state.node = id;
     options([]);
-    for (const [text, mood] of node.say || []) {
+    const lines = [...(node.say || [])];
+    // Your prepped line about her goes right after the hello.
+    if (id === 'start' && state.prep?.detail) lines.push([state.prep.detail, 'blush']);
+    for (const [text, mood] of lines) {
       if (token !== state.run) return;
       // Let a rocket land (or a cry finish) before the next line starts.
       await wait(Math.max(0, (stage.me.busyUntil || 0) - Date.now()));
@@ -508,6 +511,70 @@
     else if (!node.contact && !node.end && node.next) run(node.next);
   }
 
+  // ------------------------------------------------------------ whisper
+
+  // He asked for her friends' verdict: she hands the phone over, her avatar
+  // turns its back, her friends step up. Nothing typed here goes in the chat
+  // log, and when either side closes it, it's erased everywhere.
+  let seenW = 0;
+  async function onWhisper(open, list = []) {
+    if (open && !state.whisper) {
+      state.whisper = true;
+      state.run++;               // the script stops; real him is here
+      options([]);
+      state.closeAsk?.();
+      document.body.classList.add('whispering');
+      $('wName').textContent = $('hoName').textContent = state.her?.name || 'you';
+      if (!stage.friends.length) stage.placeFriends(Meet.DEFAULT_FRIENDS);
+      stage.whisper(true);
+      $('handoff').hidden = false;
+      Meet.voice.sfx('sparkle');
+      const line = fill('okay {name}… hand your phone to your friends 👀 I want their verdict. no peeking! 🙈');
+      stage.say('me', line, 'blush');
+      send('bot', { text: line, mood: 'blush' });
+      log('me', line);
+    } else if (!open && state.whisper) {
+      state.whisper = false;
+      $('handoff').hidden = true;
+      $('wbox').hidden = true;
+      $('wlog').innerHTML = '';
+      seenW = 0;
+      document.body.classList.remove('whispering');
+      await stage.whisper(false);
+      if (!(state.prep?.friends || []).length) stage.placeFriends([]);
+      const line = fill('okay {name}, you can look now 😇');
+      stage.say('me', line, 'chill');
+      send('bot', { text: line, mood: 'chill' });
+      log('me', line);
+      return;
+    }
+    if (!open) return;
+    $('wlog').innerHTML = '';
+    for (const w of list) {
+      const p = document.createElement('p');
+      p.className = w.from === 'me' ? 'me' : 'friends';
+      p.textContent = w.text;
+      $('wlog').appendChild(p);
+    }
+    $('wlog').scrollTop = $('wlog').scrollHeight;
+    for (const w of list.slice(seenW)) stage.say(w.from === 'me' ? 'me' : 'friends', w.text);
+    seenW = list.length;
+  }
+
+  $('hoGo').onclick = () => {
+    $('handoff').hidden = true;
+    $('wbox').hidden = false;
+    $('wmsg').focus();
+  };
+  $('wform').onsubmit = (e) => {
+    e.preventDefault();
+    const text = $('wmsg').value.trim();
+    if (!text) return;
+    $('wmsg').value = '';
+    send('wmsg', { text });
+  };
+  $('wClose').onclick = () => send('wclose');
+
   // ------------------------------------------------------------ composer
 
   let typingOn = false;
@@ -593,12 +660,22 @@
     if (prev?.sid && prev.her) {
       // Reloaded mid-conversation: skip straight back to the scene.
       Object.assign(state, prev);
+      if (state.prep) Meet.setTheme(Meet.PLACE_THEME[state.prep.place] || Meet.defaultTheme);
       $('intro').hidden = true;
       listen();
       await enterScene(false);
       log('me', fill('welcome back, {name} 🙂'));
       stage.say('me', fill('welcome back, {name} 🙂'), 'wave');
       return;
+    }
+    // A QR from your prep carries ?p=<id>: her look, friends and the place are ready.
+    const pid = new URLSearchParams(location.search).get('p');
+    if (pid) {
+      state.prep = await net.her.prep(pid).catch(() => null);
+      if (state.prep) {
+        Meet.setTheme(Meet.PLACE_THEME[state.prep.place] || Meet.defaultTheme);
+        if (state.prep.her?.avatar) Object.assign(draft, state.prep.her.avatar);
+      }
     }
     try {
       state.sid = await net.her.start();

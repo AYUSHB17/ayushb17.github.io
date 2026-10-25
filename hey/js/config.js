@@ -105,6 +105,12 @@ window.MEETCUTE = {
     any: [['noted 😄', 'happy'], ['real me just read that 👀', 'excited'], ['ha, I like that', 'happy']],
   },
 
+  // One-tap questions for her friends in whisper mode.
+  whisperLines: [
+    'okay be honest… what are my chances? 1–10 👀', 'what’s her favourite coffee? ☕', 'any tips for me? 🙏',
+    'did the QR thing work or too much? 😅', 'what would make her say yes? 🥺', 'thank you, you’re the best 🫶',
+  ],
+
   // One-tap lines on your /me screen.
   quickLines: [
     'hii 👋', 'haha 😂', 'that’s so cute 🥹', 'tell me more!',
