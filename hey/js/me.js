@@ -158,7 +158,7 @@
     else if (stage.her) { stage.her.el.remove(); stage.her = null; }
     // Her setting and friends, as you prepped them (or as her page reported them).
     Meet.setTheme(Meet.PLACE_THEME[s.scene?.place] || Meet.defaultTheme);
-    stage.placeFriends(s.scene?.friends || []);
+    stage.placeFriends([]);          // friends only appear when you call them
     stage.whispering = false;
     seenW = 0;
     $('cLog').innerHTML = '';
@@ -174,18 +174,18 @@
   // ------------------------------------------------------------ whisper
 
   let seenW = 0;
+  let wShownAt = 0; // "close & erase" pops up right after your tap; ignore ghost taps for a moment
   async function renderWhisper() {
     const s = sessions.get(open);
     if (!s) return;
     const on = !!s.whisper;
+    if (on && $('wbox').hidden) wShownAt = performance.now();
     $('wbox').hidden = !on;
     $('wbar').hidden = on || !s.her;
     document.body.classList.toggle('whispering', on);
     if (on !== stage.whispering) {
-      if (on && !stage.friends.length) stage.placeFriends(Meet.DEFAULT_FRIENDS);
       if (!on) { $('wlog').innerHTML = ''; seenW = 0; }
-      await stage.whisper(on);
-      if (!on && !(s.scene?.friends || []).length) stage.placeFriends([]);
+      await stage.whisper(on, s.scene?.friends);
     }
     if (!on) return;
     const list = s.whispers || [];
@@ -203,7 +203,7 @@
   }
 
   $('wStart').onclick = () => open && net.me.whisper(open, true);
-  $('wClose').onclick = () => open && net.me.whisper(open, false);
+  $('wClose').onclick = () => open && performance.now() - wShownAt > 800 && net.me.whisper(open, false);
   $('wform').onsubmit = (e) => {
     e.preventDefault();
     const text = $('wmsg').value.trim();

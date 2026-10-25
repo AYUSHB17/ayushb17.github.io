@@ -191,15 +191,16 @@
   // ------------------------------------------------------------ 2. maker
 
   const { skins: SKINS, hairs: HAIRS, clothes: CLOTHES } = Meet.PALETTE;
-  const draft = { skin: '#eab78f', hair: '#3b2417', hairStyle: 'long', outfit: 'dress',
-    outfitColor: '#ff7aa8', pants: '#34405e', glasses: false };
+  // Default: open wavy hair, a tee and jeans. Most girls she'd be won't be in a ponytail and a pink dress.
+  const draft = { skin: '#eab78f', hair: '#2b1a12', hairStyle: 'wavy', outfit: 'tee',
+    outfitColor: '#b5a1ff', pants: '#4a6fa5', glasses: false };
   let preview;
 
   function openMaker() {
     $('maker').hidden = false;
     preview = new Meet.Avatar(draft, { look: 'front' });
     $('preview').appendChild(preview.el);
-    chips($('hairStyles'), ['long', 'bob', 'ponytail', 'bun', 'curly', 'short'], 'hairStyle', (k) => HAIR[k].label);
+    chips($('hairStyles'), ['wavy', 'long', 'curly', 'bob', 'ponytail', 'bun', 'short'], 'hairStyle', (k) => HAIR[k].label);
     chips($('outfits'), Object.keys(OUTFITS).reverse(), 'outfit', (k) => k);
     swatches($('skins'), SKINS, 'skin');
     swatches($('hairs'), HAIRS, 'hair');
@@ -315,7 +316,6 @@
     $('scene').hidden = false;
     document.body.classList.add('in-scene');
     $('stageSlot').appendChild($('stage'));
-    stage.placeFriends(state.prep?.friends || []);
     const me = stage.place('me', C.me.avatar);
     me.el.classList.remove('peek');
     me.el.style.transition = '';
@@ -517,6 +517,10 @@
   // turns its back, her friends step up. Nothing typed here goes in the chat
   // log, and when either side closes it, it's erased everywhere.
   let seenW = 0;
+  // Buttons that pop up under a resting finger get ghost-tapped (seen in
+  // testing: "done ✕" closed the whisper the instant the box appeared).
+  const shownAt = {};
+  const settled = (k) => performance.now() - (shownAt[k] || 0) > 800;
   async function onWhisper(open, list = []) {
     if (open && !state.whisper) {
       state.whisper = true;
@@ -525,9 +529,9 @@
       state.closeAsk?.();
       document.body.classList.add('whispering');
       $('wName').textContent = $('hoName').textContent = state.her?.name || 'you';
-      if (!stage.friends.length) stage.placeFriends(Meet.DEFAULT_FRIENDS);
-      stage.whisper(true);
+      stage.whisper(true, state.prep?.friends);
       $('handoff').hidden = false;
+      shownAt.handoff = performance.now();
       Meet.voice.sfx('sparkle');
       const line = fill('okay {name}… hand your phone to your friends 👀 I want their verdict. no peeking! 🙈');
       stage.say('me', line, 'blush');
@@ -541,7 +545,6 @@
       seenW = 0;
       document.body.classList.remove('whispering');
       await stage.whisper(false);
-      if (!(state.prep?.friends || []).length) stage.placeFriends([]);
       const line = fill('okay {name}, you can look now 😇');
       stage.say('me', line, 'chill');
       send('bot', { text: line, mood: 'chill' });
@@ -562,8 +565,10 @@
   }
 
   $('hoGo').onclick = () => {
+    if (!settled('handoff')) return;
     $('handoff').hidden = true;
     $('wbox').hidden = false;
+    shownAt.wbox = performance.now();
     $('wmsg').focus();
   };
   $('wform').onsubmit = (e) => {
@@ -573,7 +578,7 @@
     $('wmsg').value = '';
     send('wmsg', { text });
   };
-  $('wClose').onclick = () => send('wclose');
+  $('wClose').onclick = () => { if (settled('wbox')) send('wclose'); };
 
   // ------------------------------------------------------------ composer
 
@@ -637,8 +642,8 @@
       return;
     }
     $('intro').hidden = true;
-    state.her = { name: 'Riya', avatar: { skin: '#e7b48f', hair: '#2b1a12', hairStyle: 'ponytail', outfit: 'dress',
-      outfitColor: '#ff8fb0', pants: '#34405e', glasses: false } };
+    state.her = { name: 'Riya', avatar: { skin: '#e7b48f', hair: '#2b1a12', hairStyle: 'wavy', outfit: 'tee',
+      outfitColor: '#b5a1ff', pants: '#4a6fa5', glasses: false } };
     await enterScene(false);
     stage.setDistance(0.5, { walk: false });
     for (const [who, t] of [['me', 'oh. hey Riya 👋'], ['her', 'haha hi 😂'], ['me', 'so… is the QR thing too much?'],

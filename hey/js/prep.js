@@ -11,20 +11,25 @@
 
   const PLACES = [['street', '🌃 night out'], ['cafe', '☕ café'], ['park', '🌳 park'], ['mall', '🛍️ mall'],
     ['college', '📚 college'], ['arcade', '🕹️ arcade']];
-  const HAIR_KEYS = ['long', 'bob', 'ponytail', 'bun', 'curly', 'short'];
+  const HAIR_KEYS = ['wavy', 'long', 'curly', 'bob', 'ponytail', 'bun', 'short']; // open hair first
 
   const randomLook = () => ({ skin: pick(PALETTE.skins.slice(1, 7)), hair: pick(PALETTE.hairs.slice(0, 5)),
-    hairStyle: pick(HAIR_KEYS), outfit: pick(['dress', 'tee', 'jacket', 'kurta', 'hoodie']),
+    hairStyle: pick(['wavy', 'wavy', 'long', 'curly', 'bob', 'ponytail']), outfit: pick(['dress', 'tee', 'jacket', 'kurta', 'hoodie']),
     outfitColor: pick(PALETTE.clothes), pants: '#34405e', glasses: Math.random() < 0.2 });
 
-  let draft = load() || { place: 'street', detail: '', her: { avatar: { skin: '#eab78f', hair: '#3b2417',
-    hairStyle: 'long', outfit: 'dress', outfitColor: '#ff7aa8', pants: '#34405e', glasses: false } }, friends: [] };
+  let draft = load() || { place: 'street', her: { avatar: { skin: '#eab78f', hair: '#2b1a12',
+    hairStyle: 'wavy', outfit: 'tee', outfitColor: '#b5a1ff', pants: '#4a6fa5', glasses: false } }, friends: [] };
+  // The line about her is about *this* girl: never carried over from a previous prep.
+  draft.detail = '';
   let editing = 'her'; // 'her' or a friend's index
   let stage = null;
   let onDone = null;
 
   function load() { try { return JSON.parse(localStorage.getItem(STORE)); } catch { return null; } }
-  function save() { try { localStorage.setItem(STORE, JSON.stringify(draft)); } catch { /* private mode */ } }
+  // Remember looks and friends between preps, but never the line about her.
+  function save() {
+    try { localStorage.setItem(STORE, JSON.stringify({ ...draft, detail: '' })); } catch { /* private mode */ }
+  }
   const current = () => (editing === 'her' ? draft.her.avatar : draft.friends[editing].avatar);
 
   function open(done) {
@@ -93,12 +98,14 @@
   }
 
   $('pGlasses').onchange = (e) => { current().glasses = e.target.checked; render(); };
-  $('pDetail').oninput = (e) => { draft.detail = e.target.value; save(); };
+  $('pDetail').oninput = (e) => { draft.detail = e.target.value; };
   $('pBack').onclick = close;
   $('pGo').onclick = async () => {
     $('pGo').disabled = true;
     try {
       const pid = await net.me.prep(draft);
+      draft.detail = '';                 // next girl gets her own line
+      $('pDetail').value = '';
       $('prep').hidden = true;
       Meet.setTheme(Meet.defaultTheme);
       const n = draft.friends.length;

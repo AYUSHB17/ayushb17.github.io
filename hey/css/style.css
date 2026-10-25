@@ -360,7 +360,7 @@ body:not(.in-scene) .stage { z-index: 1; }
 .av.turned .backhead { display: inline; }
 .av.turned .hair-front, .av.turned .face { display: none; }
 /* whisper bubble: from her friends, dashed and secretive */
-.bubble-friends { left: 4%; background: #e8fff2; border: 2px dashed #36b37e; border-bottom-left-radius: 4px; font-style: italic; }
+.bubble-friends { right: 4%; border-bottom-right-radius: 4px; background: #e8fff2; border: 2px dashed #36b37e; font-style: italic; }
 .bubble-friends::after { content: ' 🤫'; }
 
 /* the whisper box: a separate, secret-looking chat */

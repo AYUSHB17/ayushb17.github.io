@@ -11,8 +11,8 @@
   const ME_X = '78%';
   const NEAR = 18; // % each one moves from start to right next to each other
   const VOICES = Object.assign({ me: { pitch: 470 }, her: { pitch: 660 }, friends: { pitch: 760 } }, window.MEETCUTE?.voices);
-  const FRIEND_X = [10, 33, 3, 41];        // a little group around her, a step behind
-  const WHISPER_X = { her: 6, friends: [24, 34, 16, 42] };
+  const FRIEND_X = [10, 33, 3, 41];        // prep preview only: a little group around her
+  const OFFSTAGE = '-18%';                 // where friends wait before you call them
   const POKES = {
     me: [['giggle', 'hehe'], ['blush', 'oh! hi'], ['spin', 'wheee'], ['chill', 'mhm']],
     her: [['giggle', 'hehe'], ['spin', 'wheee'], ['blush', 'heyy'], ['surprised', 'oh!']],
@@ -66,11 +66,11 @@
     other(who) { return who === 'me' ? (this.whispering ? this.friends[0] : this.her) : this.me; }
 
     // Her friends: same avatars, a bit smaller, standing behind her.
-    placeFriends(list = []) {
+    placeFriends(list = [], { offstage = false } = {}) {
       for (const f of this.friends) f.el.remove();
       this.friends = list.slice(0, 4).map((f, i) => {
         const a = new Avatar(f.avatar, { className: 'av-friend', look: 'right' });
-        a.el.style.left = FRIEND_X[i] + '%';
+        a.el.style.left = offstage ? OFFSTAGE : FRIEND_X[i] + '%';
         a.el.addEventListener('click', () => this.poke('friends', a));
         this.root.insertBefore(a.el, this.root.firstChild);
         return a;
@@ -78,9 +78,10 @@
       return this.friends;
     }
 
-    // Whisper: she turns her back and steps aside, her friends come forward,
-    // tiny-him leans in. Off puts everyone back.
-    async whisper(on) {
+    // Whisper: her friends aren't on screen until you call them. They walk
+    // in from the edge and huddle around tiny-him; she turns her back and
+    // steps aside. Closing sends them off screen again.
+    async whisper(on, friends) {
       this.whispering = on;
       // Faded bubbles still hold their last words; blank them so nothing
       // whispered survives in the page after it's closed.
@@ -91,20 +92,28 @@
       }
       const her = this.her;
       if (on) {
+        this.placeFriends(friends?.length ? friends : window.Meet.DEFAULT_FRIENDS, { offstage: true });
+        const meX = parseFloat(this.me?.el.style.left) || 78;
+        const spots = [meX - 13, meX + 12, meX - 23, meX + 21].map((x) => Math.max(3, Math.min(96, x)));
         her?.mood('shy', { ms: 1400 });
         her?.el.classList.add('turned');
+        this.me?.look('left');
         await Promise.all([
-          her?.walkTo(WHISPER_X.her + '%', 800),
-          ...this.friends.map((f, i) => f.walkTo(WHISPER_X.friends[i] + '%', 900)),
+          her?.walkTo('6%', 800),
+          ...this.friends.map((f, i) => {
+            f.look(spots[i] < meX ? 'right' : 'left');   // face tiny-him
+            return new Promise((r) => setTimeout(r, i * 250)).then(() => f.walkTo(spots[i] + '%', 1400));
+          }),
         ]);
         this.friends.forEach((f) => f.mood('giggle', { ms: 1400 }));
-        this.me?.mood('chill', { ms: 2000 });
+        this.me?.mood('blush', { ms: 2000 });
       } else {
         her?.el.classList.remove('turned');
         await Promise.all([
-          ...this.friends.map((f, i) => f.walkTo(FRIEND_X[i] + '%', 800)),
+          ...this.friends.map((f) => { f.look('left'); return f.walkTo(OFFSTAGE, 1400); }),
           this.setDistance(this.distance || 0),   // walks her back to where she was
         ]);
+        this.placeFriends([]);
         her?.mood('happy', { ms: 1200 });
       }
     }
