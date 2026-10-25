@@ -9,7 +9,7 @@
   // Start apart, end side by side; setDistance() moves between the two.
   const HER_X = '22%';
   const ME_X = '78%';
-  const NEAR = 21; // % each one moves from start to right next to each other
+  const NEAR = 18; // % each one moves from start to right next to each other
   const VOICES = Object.assign({ me: { pitch: 470 }, her: { pitch: 660 } }, window.MEETCUTE?.voices);
   const POKES = {
     me: [['giggle', 'hehe'], ['blush', 'oh! hi'], ['spin', 'wheee'], ['chill', 'mhm']],

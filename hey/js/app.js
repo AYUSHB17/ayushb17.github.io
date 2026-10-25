@@ -77,11 +77,54 @@
 
   // A button that runs away from her finger a few times, then gives up and
   // works. The joke lands and she still has a real way out.
-  function dodgy(btn, { labels, giveUp, onDodge }) {
+  // wander: also drift around the screen nonstop until it gives up.
+  function dodgy(btn, { labels, giveUp, onDodge, onGiveUp, wander = false }) {
     let n = 0;
     let swallowUntil = 0;
-    btn.classList.add('dodgy');
     let last = 0;
+    let drift = null;
+    btn.classList.add('dodgy');
+
+    const launch = () => {
+      if (btn.classList.contains('flying')) return;
+      // Out of its container so it can fly anywhere on the screen.
+      const r = btn.getBoundingClientRect();
+      document.body.appendChild(btn);
+      btn.classList.add('flying');
+      btn.style.left = r.left + 'px';
+      btn.style.top = r.top + 'px';
+      void btn.offsetWidth;
+    };
+    // Somewhere random on screen, at least `away` px from where it is now.
+    const hop = (away) => {
+      const r = btn.getBoundingClientRect();
+      let x;
+      let y;
+      let tries = 0;
+      do {
+        x = 12 + Math.random() * Math.max(10, innerWidth - r.width - 24);
+        y = 64 + Math.random() * Math.max(10, innerHeight * 0.66 - r.height);
+      } while (Math.hypot(x - r.left, y - r.top) < away && ++tries < 25);
+      btn.style.left = x + 'px';
+      btn.style.top = y + 'px';
+    };
+    const surrender = () => {
+      clearInterval(drift);
+      btn.classList.remove('wander');
+      btn.textContent = giveUp;
+      onGiveUp?.();
+    };
+
+    if (wander) {
+      launch();
+      btn.classList.add('wander');
+      hop(80);
+      drift = setInterval(() => {
+        if (!btn.isConnected) return clearInterval(drift);
+        hop(80);
+      }, 1100);
+    }
+
     const flee = (e) => {
       if (n >= labels.length) return false;
       e.preventDefault();
@@ -89,28 +132,12 @@
       // A tap fires pointerdown and then a compatibility mouseenter: one dodge, not two.
       if (performance.now() - last < 400) return true;
       last = performance.now();
-      const r = btn.getBoundingClientRect();
-      if (!btn.classList.contains('flying')) {
-        // Out of its container so it can fly anywhere on the screen.
-        document.body.appendChild(btn);
-        btn.classList.add('flying');
-        btn.style.left = r.left + 'px';
-        btn.style.top = r.top + 'px';
-        void btn.offsetWidth;
-      }
-      const W = innerWidth;
-      const H = innerHeight;
-      let x;
-      let y;
-      let tries = 0;
-      do {
-        x = 12 + Math.random() * Math.max(10, W - r.width - 24);
-        y = 70 + Math.random() * Math.max(10, H * 0.62 - r.height);
-      } while (Math.hypot(x - r.left, y - r.top) < 150 && ++tries < 25);
-      btn.style.left = x + 'px';
-      btn.style.top = y + 'px';
+      launch();
+      btn.classList.add('zoom');           // a dodge is a quick jump, faster than the drift
+      setTimeout(() => btn.classList.remove('zoom'), 300);
+      hop(150);
       btn.textContent = labels[n++];
-      if (n === labels.length) setTimeout(() => { btn.textContent = giveUp; }, 900);
+      if (n === labels.length) setTimeout(surrender, 900);
       // The finger lifts where the button used to be; don't let that land on something else.
       swallowUntil = performance.now() + 500;
       Meet.voice.sfx('nope');
@@ -118,7 +145,13 @@
       return true;
     };
     btn.addEventListener('pointerdown', flee);
-    btn.addEventListener('mouseenter', flee);
+    // On a laptop, dodge when the mouse moves onto it. Not mouseenter: a
+    // wandering button drifting under a resting cursor would dodge by itself.
+    // Chrome also fires a synthetic move with zero movement when the element
+    // slides under the cursor; only real motion counts.
+    btn.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse' && (e.movementX || e.movementY)) flee(e);
+    });
     // Keyboard "clicks" skip pointerdown; count them as dodges too.
     btn.addEventListener('click', (e) => {
       // The tap that triggered the last dodge also produces a click on the
@@ -345,34 +378,44 @@
   }
 
   // The date question floats in the middle of the screen while tiny-him
-  // holds out flowers. "maybe" runs away a few times; "yes" gets bigger.
+  // holds out flowers. "yes" is enormous; "no" is tiny and wanders around
+  // the screen. Catch it three times and it gives up, stops, and works.
   function bigAsk(q) {
+    const nq = q.no || q.maybe;
     const wrap = document.createElement('div');
     wrap.className = 'bigask';
     wrap.innerHTML = `<div class="bigask-card"><span class="big-emoji">💐</span><h2></h2>
-      <div class="bigask-btns"><button class="btn primary grow" data-a="yes"></button>
-      <button class="btn ghost" data-a="maybe"></button></div><p class="fineprint"></p></div>`;
+      <div class="bigask-btns"><button class="btn primary grow huge-yes" data-a="yes"></button></div>
+      <p class="fineprint"></p></div>`;
     wrap.querySelector('h2').textContent = fill(q.text);
     wrap.querySelector('.fineprint').textContent = q.fineprint || '';
     const yes = wrap.querySelector('[data-a=yes]');
-    const maybe = wrap.querySelector('[data-a=maybe]');
+    const no = document.createElement('button');
+    no.className = 'btn ghost tiny-no';
+    no.textContent = nq.text;
     yes.textContent = q.yes.text;
-    maybe.textContent = q.maybe.text;
     document.body.appendChild(wrap);
+    wrap.appendChild(no);
     Meet.voice.sfx('sparkle');
     stage.me.mood('flowers', { ms: 0 });
-    const close = () => { wrap.remove(); maybe.remove(); state.closeAsk = null; };
+    const close = () => { wrap.remove(); no.remove(); state.closeAsk = null; };
     state.closeAsk = close;
-    dodgy(maybe, {
-      labels: q.maybe.dodges,
-      giveUp: q.maybe.giveUp,
+    dodgy(no, {
+      labels: nq.dodges,
+      giveUp: nq.giveUp,
+      wander: true,
       onDodge: (n) => {
-        yes.style.transform = `scale(${1 + n * 0.18})`;
+        yes.style.transform = `scale(${1 + n * 0.14})`;
         stage.me.mood(n === 2 ? 'cry' : 'puppy', { ms: 1600 });
         setTimeout(() => { if (wrap.isConnected) stage.me.mood('flowers', { ms: 0 }); }, 1700);
       },
+      // Once it gives up it stops, grows to a normal size and can be tapped.
+      onGiveUp: () => no.classList.add('gave-up'),
     });
+    // Same ghost-tap guard as the answer chips: the card can appear right under her finger.
+    const shownAt = performance.now();
     yes.onclick = () => {
+      if (performance.now() - shownAt < 600) return;
       close();
       confetti();
       stage.me.hold('');
@@ -380,9 +423,9 @@
       stage.setDistance(1);
       herSays(q.yes.text, 'choice', q.yes.next);
     };
-    maybe.onclick = () => {
+    no.onclick = () => {
       close();
-      herSays(maybe.textContent, 'choice', q.maybe.next);
+      herSays(no.textContent, 'choice', nq.next);
     };
   }
 
@@ -433,10 +476,12 @@
     send(kind, { text, mood });
     if (kind === 'choice') options([]);
     state.run++; // a reply from her always cuts off whatever tiny-him was saying
-    const rejecting = REJECT.test(text) ||
+    const rejecting = go === 'no' || go === 'taken' || REJECT.test(text) ||
       (/^\s*(no+|nope|nah)\b/i.test(text) && ['ask', 'yes', 'maybe'].includes(state.node));
     // Every reply brings them a step closer; a no sends tiny-him back to a polite distance.
-    await (rejecting ? stage.setDistance(0) : stage.closer());
+    // A hesitant "maybe/no" leaves the distance as it is.
+    if (rejecting) await stage.setDistance(0);
+    else if (go !== 'maybe') await stage.closer();
     await stage.say('her', text, mood, energy);
     log('her', text);
     if (state.live) { if (REJECT.test(text)) state.closeAsk?.(); return; }

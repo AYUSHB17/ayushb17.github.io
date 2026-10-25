@@ -76,18 +76,18 @@ window.MEETCUTE = {
 
     ask: {
       say: [['okay. being brave now…', 'blush'], ['I got you something 💐', 'flowers']],
-      // Floats mid-screen. "maybe" runs away `dodges.length` times, then gives
-      // up and works. Typing "no" or "I'm seeing someone" always ends kindly.
+      // Floats mid-screen. "yes" is huge; "no" is tiny, wanders the screen and
+      // jumps away `dodges.length` times when caught, then stops and works. Typing "no" or "I'm seeing someone" always ends kindly.
       bigAsk: {
         text: 'would you go on a little coffee date with me? ☕',
         yes: { text: 'yes 💖', next: 'yes' },
-        maybe: { text: 'maybe', next: 'maybe', dodges: ['maybe? 🤨', 'nope 🙈', 'you sure? 🥺'], giveUp: 'fine… maybe 🙄' },
+        no: { text: 'maybe/no', next: 'maybe', dodges: ['maybe? 🤨', 'nope, too slow 🙈', 'you sure? 🥺'], giveUp: 'fine… maybe/no 😔' },
         fineprint: 'not your thing? just type no — tiny me will survive 🥲',
       },
     },
     yes: { say: [['WAIT REALLY?! 🥹', 'rocket'], ['…ahem. I mean. cool. 😎', 'chill'],
       ['leave your number or insta and I’ll text you (normally, promise)', 'happy']], contact: true, next: 'thanks' },
-    maybe: { say: [['totally fair 🙂', 'nod'], ['you can type anything here — real me is reading it', 'happy'],
+    maybe: { say: [['totally fair 🙂 no pressure at all', 'nod'], ['you can type anything here — real me is reading it', 'happy'],
       ['or leave your insta and we can talk later, no pressure', 'shy']], contact: true, next: 'thanks' },
     thanks: { say: [['saved 💌', 'love'], ['real me will text you soon. this was fun, {name}', 'happy']], next: 'chat' },
     chat: { say: [['feel free to keep chatting with me here 👀', 'wave']], end: true },

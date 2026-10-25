@@ -380,6 +380,21 @@ body.in-scene .mute { top: 46px; }
 .dodgy.flying { position: fixed !important; margin: 0; white-space: nowrap; }
 .btn.ghost.flying { background: rgba(22, 13, 46, .9); color: var(--text); border-color: var(--line); }
 .grow { transition: transform .25s cubic-bezier(.3, 1.6, .5, 1); }
+.dodgy.wander { transition: left 1.1s ease-in-out, top 1.1s ease-in-out; }
+.dodgy.zoom { transition: left .25s cubic-bezier(.3, 1.4, .5, 1), top .25s cubic-bezier(.3, 1.4, .5, 1); }
+
+/* the date card's answers: an absurdly big yes, a tiny no that won't sit still */
+.btn.huge-yes {
+  font-size: 34px; padding: 22px 48px; border-radius: 999px; transform-origin: center;
+  box-shadow: 0 14px 40px rgba(255, 79, 139, .55); animation: yesbeat 1.2s ease-in-out infinite;
+}
+@keyframes yesbeat { 50% { box-shadow: 0 14px 40px rgba(255, 79, 139, .55), 0 0 0 12px rgba(255, 122, 168, .22); } }
+.btn.tiny-no {
+  font-size: 9px; padding: 3px 7px; line-height: 1.2; z-index: 41; opacity: .85;
+  background: #fff !important; color: #8a6f96 !important; border: 1px solid #e7cfe0 !important;
+}
+.btn.tiny-no.gave-up { font-size: 15px; padding: 10px 18px; opacity: 1; }
+.bigask-btns { min-height: 110px; }
 
 /* ---- the big floating date question */
 .bigask {
