@@ -49,7 +49,6 @@ window.MEETCUTE = {
         { text: 'no, it’s actually cute', next: 'cute' },
         { text: 'who even does this 💀', next: 'who' },
       ],
-      any: 'cute',
     },
     toomuch: { say: [['haha fair 😂', 'laugh'], ['in my defence, my pickup lines are worse', 'shy']], next: 'about' },
     cute: { say: [['oh. cool. cool cool cool', 'chill'], ['(tiny me is screaming internally)', 'rocket']], next: 'about' },
@@ -67,12 +66,10 @@ window.MEETCUTE = {
         { text: 'running errands 🛒', next: 'errands' },
         { text: 'not telling a stranger 😏', next: 'mystery' },
       ],
-      any: 'heard',
     },
     friends: { say: [['nice, then I won’t keep you long 🙂', 'happy']], next: 'ask' },
     errands: { say: [['ah the glamorous life 😄', 'laugh']], next: 'ask' },
     mystery: { say: [['respect. mysterious. noted 🕵️', 'laugh']], next: 'ask' },
-    heard: { say: [['that sounds nice 🙂', 'happy']], next: 'ask' },
 
     ask: {
       say: [['okay. being brave now…', 'blush'], ['I got you something 💐', 'flowers']],
@@ -94,15 +91,6 @@ window.MEETCUTE = {
 
     taken: { say: [['ahh, lucky them 🙂', 'happy'], ['thanks for playing along anyway — you made my day', 'wave']], end: true, bye: true },
     no: { say: [['no worries at all 🙂', 'nod'], ['thanks for reading this far. have a lovely day ✨', 'wave']], end: true, bye: true },
-  },
-
-  // Her free-text messages get one of these while you're not typing live.
-  replies: {
-    laugh: [['haha 😂', 'laugh'], ['okay that got a laugh out of me', 'laugh']],
-    love: [['stop, I’m blushing 🙈', 'shy']],
-    think: [['hmm good question… real me will answer that one 😄', 'think']],
-    sad: [['aw 🥺', 'sad']],
-    any: [['noted 😄', 'happy'], ['real me just read that 👀', 'excited'], ['ha, I like that', 'happy']],
   },
 
   // One-tap questions for her friends in whisper mode.

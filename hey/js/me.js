@@ -92,7 +92,10 @@
     if (ev.from !== 'me' && ev.from !== 'bot' && ev.type !== 'live') buzz();
     if (ev.sid !== open) return;
     if (ev.type === 'join') { stage.place('her', s.her.avatar); stage.her.mood('excited'); }
-    else if ((ev.type === 'msg' || ev.type === 'choice') && ev.from !== 'me') {
+    // Only her own words go on her side. This used to test `from !== 'me'`,
+    // which also put every scripted 🤖 line on her side, so the log read as
+    // one person talking to themself.
+    else if (ev.type === 'choice' || (ev.type === 'msg' && ev.from === 'her')) {
       stage.typing('her', false);
       stage.closer();
       stage.say('her', ev.text, ev.mood || undefined);
@@ -130,7 +133,7 @@
       const btn = document.createElement('button');
       btn.className = 'convo-card' + (s.left ? ' left' : '');
       const name = s.her?.name || (s.left ? 'said not today' : 'scanned… making her avatar');
-      const line = s.typing ? 'typing…' : last ? (last.from === 'her' ? '' : 'you: ') + last.text : ago(s.created);
+      const line = s.typing ? 'typing…' : last ? ({ her: '', bot: '🤖 ' }[last.from] ?? 'you: ') + last.text : ago(s.created);
       btn.innerHTML = `<div class="mini"></div><div class="who"><b>${esc(name)}</b> <span class="dot${s.online ? ' on' : ''}"></span>
         <p>${esc(line)}</p></div>${s.contact ? '<span class="tag">📱 got it</span>' : ''}`;
       if (s.her) btn.firstChild.appendChild(new Avatar(s.her.avatar, { look: 'front' }).el);
@@ -238,10 +241,13 @@
   function status() {
     const s = sessions.get(open);
     if (!s) return;
+    const last = s.messages?.[s.messages.length - 1];
     $('cStatus').textContent = s.left ? 'she said not today 🙂'
       : s.typing ? `${s.her?.name || 'she'} is typing…`
       : !s.her ? 'she’s making her avatar…'
       : s.live ? 'you’re live — she sees what you send'
+      // She typed something herself: the script no longer answers that, you do.
+      : last?.from === 'her' && !last.choice ? 'she wrote to you — reply to take over'
       : 'script is running · send anything to take over';
   }
 

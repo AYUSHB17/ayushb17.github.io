@@ -488,27 +488,18 @@
     await stage.say('her', text, mood, energy);
     log('her', text);
     if (state.live) { if (REJECT.test(text)) state.closeAsk?.(); return; }
-    const node = C.script[state.node];
     if (go) return run(go);
     // However the script is going, a clear no ends it kindly.
     if (rejecting) {
       state.closeAsk?.();
       return run(/someone|friend|taken|married/i.test(text) ? 'taken' : 'no');
     }
-    if (node?.any && node.options) return run(node.any);
-    // Free text outside a question: tiny-him answers from the reply pool,
-    // then puts the question back if one was open.
-    const pool = C.replies[mood] || C.replies.any;
-    const [reply, rmood] = pick(pool);
-    stage.typing('me', true);
-    await wait(900);
-    if (state.live) return stage.typing('me', false);
-    send('bot', { text: reply, mood: rmood });
-    await stage.say('me', reply, rmood);
-    log('me', reply);
-    if (state.live || !node) return;
-    if (node.options) options(node.options.map((o) => ({ text: o.text, go: o.next })));
-    else if (!node.contact && !node.end && node.next) run(node.next);
+    // Anything she types herself is for real him. Tiny-him used to answer it
+    // with a canned line and replay the script, so a "hi" got "noted 😄" in
+    // his name and the conversation repeated itself. Now the script waits for
+    // him to answer live. A question already on screen keeps its buttons, so
+    // she can still tap one.
+    stage.me.mood('excited', { energy: 0.8 });
   }
 
   // ------------------------------------------------------------ whisper

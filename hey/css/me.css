@@ -52,7 +52,7 @@ code { background: rgba(var(--tint), .12); padding: 1px 6px; border-radius: 6px;
 .qr-card #qrCode img, .qr-card #qrCode canvas { display: block; width: min(68vw, 300px) !important; height: auto !important; }
 .qr-top { font-size: 30px; font-weight: 700; color: var(--gold); margin: 0 0 22px; }
 .qr-bottom { font-size: 20px; margin: 22px 0 0; color: var(--muted); }
-.line.bot { opacity: .5; font-style: italic; }
+.line.bot { opacity: .65; font-style: italic; }
 
 /* prep */
 .top-actions { display: flex; gap: 8px; }
@@ -63,3 +63,11 @@ code { background: rgba(var(--tint), .12); padding: 1px 6px; border-radius: 6px;
 
 /* whisper box — the same shape on her phone */
 .whisper-bar { display: flex; justify-content: center; padding: 2px 0 4px; }
+
+/* Typing on a phone: the keyboard takes half the screen and the log was left
+   with almost nothing, so the history looked gone. While the composer has
+   focus, fold the stage and chip rows away and give the log that space. */
+#convo:has(#composer :focus) .stage-slot,
+#convo:has(#composer :focus) #emotes,
+#convo:has(#composer :focus) #quick,
+#convo:has(#composer :focus) #wbar { display: none; }
